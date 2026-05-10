@@ -1,0 +1,88 @@
+/* ============================================
+ * Collections Page Styles
+ * ============================================ */
+
+.createBtn {
+  margin-bottom: var(--space-xl);
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .createBtn {
+    width: auto;
+  }
+}
+
+.createForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.textarea {
+  resize: none;
+  min-height: 60px;
+}
+
+.typeSelector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.grid {
+  margin-top: var(--space-md);
+}
+
+.collectionCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all var(--transition-normal);
+  min-height: 140px;
+}
+
+.collectionCard:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.collectionIcon {
+  font-size: 2rem;
+}
+
+.collectionName {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.collectionDesc {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.collectionType {
+  margin-top: auto;
+  width: fit-content;
+}

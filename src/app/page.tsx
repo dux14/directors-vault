@@ -1,66 +1,65 @@
-import Image from "next/image";
+/* ============================================
+ * Home Page — Personal Movie Ranking
+ * Shows watched movies sorted by personal rating
+ * ============================================ */
+
+import { getRankedMovies } from "@/lib/actions";
+import { getTrending } from "@/lib/tmdb";
+import RankingList from "./RankingList";
+import TrendingRow from "./TrendingRow";
 import styles from "./page.module.css";
 
-export default function Home() {
+export default async function HomePage() {
+  const [rankedMovies, trending] = await Promise.all([
+    getRankedMovies().catch(() => []),
+    getTrending("week").catch(() => ({ results: [] })),
+  ]);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
+    <div className="page">
+      <div className="container">
+        {/* Header */}
+        <div className={`page-header ${styles.header}`}>
+          <h1>
+            <span className={styles.accent}>Mi</span> Ranking
+          </h1>
           <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+            {rankedMovies.length > 0
+              ? `${rankedMovies.length} películas calificadas`
+              : "Empieza a calificar películas para ver tu ranking"}
           </p>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        {/* Trending Discovery */}
+        {trending.results.length > 0 && (
+          <section className="section">
+            <div className="section-header">
+              <h2 className="section-title">🔥 Trending esta semana</h2>
+            </div>
+            <TrendingRow movies={trending.results.slice(0, 12)} />
+          </section>
+        )}
+
+        {/* Personal Ranking */}
+        <section className="section">
+          <div className="section-header">
+            <h2 className="section-title">⭐ Mi Top Películas</h2>
+          </div>
+
+          {rankedMovies.length > 0 ? (
+            <RankingList movies={rankedMovies} />
+          ) : (
+            <div className="empty-state">
+              <div className="icon">🎬</div>
+              <h3>Tu ranking está vacío</h3>
+              <p>
+                Busca películas que hayas visto, márcalas como vistas y
+                dales tu calificación personal.
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

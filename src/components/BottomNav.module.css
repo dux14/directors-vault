@@ -1,0 +1,77 @@
+/* ============================================
+ * Bottom Navigation Styles
+ * ============================================ */
+
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--bottom-nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(10, 10, 15, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-subtle);
+  z-index: var(--z-sticky);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  text-decoration: none;
+  color: var(--text-tertiary);
+  transition: all var(--transition-fast);
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 56px;
+}
+
+.navItem:hover {
+  color: var(--text-secondary);
+}
+
+.navItem.active {
+  color: var(--accent-primary);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  font-family: var(--font-body);
+}
+
+.indicator {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: var(--accent-primary);
+  border-radius: 0 0 var(--radius-full) var(--radius-full);
+  box-shadow: 0 0 8px rgba(212, 168, 67, 0.5);
+}
+
+/* Hide on desktop — use sidebar instead */
+@media (min-width: 768px) {
+  .nav {
+    display: none;
+  }
+}

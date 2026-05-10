@@ -1,0 +1,8 @@
+/* ============================================
+ * Collection Detail Styles
+ * ============================================ */
+
+.backBtn {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-sm);
+}

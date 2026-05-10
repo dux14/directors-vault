@@ -1,0 +1,138 @@
+/* ============================================
+ * Login Page Styles
+ * ============================================ */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: var(--space-lg);
+  position: relative;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 168, 67, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(212, 168, 67, 0.05) 0%, transparent 50%),
+    var(--bg-primary);
+  z-index: -1;
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-2xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  animation: slideUp var(--transition-slow) ease-out;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.logoIcon {
+  font-size: 3rem;
+  margin-bottom: var(--space-sm);
+  filter: drop-shadow(0 0 12px rgba(212, 168, 67, 0.4));
+}
+
+.logoText {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 900;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+}
+
+.logoSubtext {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  margin-top: var(--space-xs);
+  letter-spacing: 1px;
+}
+
+.googleBtn {
+  width: 100%;
+  justify-content: center;
+  gap: var(--space-sm);
+  font-size: 0.9375rem;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: var(--space-lg) 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-default);
+}
+
+.divider span {
+  padding: 0 var(--space-md);
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.toggle {
+  text-align: center;
+  margin-top: var(--space-lg);
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.toggleLink {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+}
+
+.toggleLink:hover {
+  color: var(--accent-secondary);
+}
+
+.error {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--status-not-interested);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.success {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--status-watched);
+  font-size: 0.875rem;
+  text-align: center;
+}

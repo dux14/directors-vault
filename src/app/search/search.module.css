@@ -1,0 +1,62 @@
+/* ============================================
+ * Search Page Styles
+ * ============================================ */
+
+.searchWrapper {
+  position: sticky;
+  top: 0;
+  padding: var(--space-lg) 0 var(--space-md);
+  background: var(--bg-primary);
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-md);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.searchInput {
+  padding-left: 2.75rem;
+  padding-right: 2.5rem;
+  font-size: 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+}
+
+.searchInput:focus {
+  background: var(--bg-secondary);
+}
+
+.clearBtn {
+  position: absolute;
+  right: var(--space-md);
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: var(--space-xs);
+  display: flex;
+  align-items: center;
+  transition: color var(--transition-fast);
+}
+
+.clearBtn:hover {
+  color: var(--text-primary);
+}
+
+.resultsHeader {
+  margin-bottom: var(--space-md);
+}
+
+.skeletonCard {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
