@@ -99,7 +99,7 @@ export async function setMovieStatus(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     user_id: user.id,
     tmdb_movie_id: tmdbMovieId,
     status,
@@ -110,6 +110,11 @@ export async function setMovieStatus(
     watched_at: status === "watched" ? new Date().toISOString() : null,
     updated_at: new Date().toISOString(),
   };
+
+  // Set initial watch count when marking as watched
+  if (status === "watched") {
+    payload.watch_count = 1;
+  }
 
   const { data, error } = await supabase
     .from("user_movies")
@@ -125,7 +130,7 @@ export async function setMovieStatus(
   return data as UserMovie;
 }
 
-/** Rate a movie (must be watched) */
+/** Rate a movie with letter grade (1=F ... 8=S) */
 export async function rateMovie(
   tmdbMovieId: number,
   rating: number
@@ -136,14 +141,43 @@ export async function rateMovie(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  if (rating < 0.5 || rating > 10) {
-    throw new Error("Rating must be between 0.5 and 10");
+  if (rating < 1 || rating > 8 || !Number.isInteger(rating)) {
+    throw new Error("Rating must be an integer between 1 and 8");
   }
 
   const { data, error } = await supabase
     .from("user_movies")
     .update({
       personal_rating: rating,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", user.id)
+    .eq("tmdb_movie_id", tmdbMovieId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+  return data as UserMovie;
+}
+
+/** Update watch count for a movie */
+export async function updateWatchCount(
+  tmdbMovieId: number,
+  count: number
+): Promise<UserMovie> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  if (count < 0) throw new Error("Watch count cannot be negative");
+
+  const { data, error } = await supabase
+    .from("user_movies")
+    .update({
+      watch_count: count,
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", user.id)

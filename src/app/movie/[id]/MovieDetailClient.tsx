@@ -7,6 +7,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,11 +16,78 @@ import {
   getBackdropUrl,
   getProfileUrl,
 } from "@/lib/tmdb";
-import { setMovieStatus, rateMovie, removeUserMovie } from "@/lib/actions";
+import {
+  setMovieStatus,
+  rateMovie,
+  removeUserMovie,
+  updateWatchCount,
+} from "@/lib/actions";
+import { ratingToGrade, getRatingColor, getRatingDef } from "@/lib/ratings";
 import type { UserMovie, MovieStatus } from "@/lib/types";
-import RatingSlider from "@/components/RatingSlider";
+import RatingPicker from "@/components/RatingPicker";
 import MovieCard from "@/components/MovieCard";
 import styles from "./movie.module.css";
+
+/* ---- SVG Icon Components ---- */
+const IconCheck = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const IconClock = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const IconX = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const IconStar = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+const IconEye = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const IconMinus = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+const IconTrash = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+  </svg>
+);
+
+const IconEdit = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
 
 interface Props {
   movie: TMDBMovieDetail;
@@ -32,8 +100,11 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const [currentStatus, setCurrentStatus] = useState<MovieStatus | null>(
     userMovie?.status || null
   );
-  const [currentRating, setCurrentRating] = useState<number>(
-    userMovie?.personal_rating || 5
+  const [currentRating, setCurrentRating] = useState<number | null>(
+    userMovie?.personal_rating ?? null
+  );
+  const [watchCount, setWatchCount] = useState<number>(
+    userMovie?.watch_count ?? 0
   );
   const [showRating, setShowRating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,6 +132,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
       setCurrentStatus(status);
       if (status === "watched") {
         setShowRating(true);
+        if (watchCount === 0) setWatchCount(1);
       }
     } catch (error) {
       console.error("Error setting status:", error);
@@ -69,6 +141,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   };
 
   const handleRatingSave = async () => {
+    if (currentRating === null) return;
     setSaving(true);
     try {
       await rateMovie(movie.id, currentRating);
@@ -85,6 +158,8 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     try {
       await removeUserMovie(movie.id);
       setCurrentStatus(null);
+      setCurrentRating(null);
+      setWatchCount(0);
       setShowRating(false);
       startTransition(() => router.refresh());
     } catch (error) {
@@ -92,6 +167,19 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     }
     setSaving(false);
   };
+
+  const handleWatchCountChange = async (delta: number) => {
+    const newCount = Math.max(0, watchCount + delta);
+    setWatchCount(newCount);
+    try {
+      await updateWatchCount(movie.id, newCount);
+    } catch (error) {
+      console.error("Error updating watch count:", error);
+      setWatchCount(watchCount); // Revert on error
+    }
+  };
+
+  const ratingDef = getRatingDef(userMovie?.personal_rating ?? null);
 
   return (
     <div className={styles.page}>
@@ -163,7 +251,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               {runtime && <span>{runtime}</span>}
               {movie.vote_average > 0 && (
                 <span className={styles.tmdbRating}>
-                  ⭐ {movie.vote_average.toFixed(1)}
+                  <IconStar /> {movie.vote_average.toFixed(1)}
                 </span>
               )}
             </div>
@@ -196,15 +284,20 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                     : "not-interested"
                 }`}
               >
-                {currentStatus === "watched"
-                  ? "✓ Vista"
-                  : currentStatus === "want_to_watch"
-                  ? "⏳ Pendiente"
-                  : "✕ No interesada"}
+                {currentStatus === "watched" ? (
+                  <><IconCheck /> Vista</>
+                ) : currentStatus === "want_to_watch" ? (
+                  <><IconClock /> Pendiente</>
+                ) : (
+                  <><IconX /> No interesada</>
+                )}
               </span>
-              {userMovie?.personal_rating && (
-                <span className="rating-badge">
-                  ⭐ {userMovie.personal_rating.toFixed(1)}
+              {ratingDef && (
+                <span
+                  className="rating-badge"
+                  style={{ color: ratingDef.color, borderColor: ratingDef.color }}
+                >
+                  {ratingDef.grade}
                 </span>
               )}
             </div>
@@ -219,7 +312,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               }`}
               id="btn-watched"
             >
-              ✓ Vista
+              <IconCheck /> Vista
             </button>
             <button
               onClick={() => handleStatusChange("want_to_watch")}
@@ -231,7 +324,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               }`}
               id="btn-watchlist"
             >
-              ⏳ Quiero Ver
+              <IconClock /> Quiero Ver
             </button>
             <button
               onClick={() => handleStatusChange("not_interested")}
@@ -243,7 +336,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               }`}
               id="btn-not-interested"
             >
-              ✕ No
+              <IconX /> No
             </button>
           </div>
 
@@ -254,8 +347,38 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               className="btn btn-primary btn-sm"
               id="btn-rate"
             >
-              {userMovie?.personal_rating ? "Editar Rating" : "Calificar"}
+              {userMovie?.personal_rating ? (
+                <><IconEdit /> Editar Rating</>
+              ) : (
+                <><IconStar /> Calificar</>
+              )}
             </button>
+          )}
+
+          {/* Watch count */}
+          {currentStatus === "watched" && (
+            <div className={styles.watchCount}>
+              <span className={styles.watchCountLabel}>
+                <IconEye /> Visto {watchCount} {watchCount === 1 ? "vez" : "veces"}
+              </span>
+              <div className={styles.watchCountControls}>
+                <button
+                  onClick={() => handleWatchCountChange(-1)}
+                  disabled={watchCount <= 0}
+                  className="btn btn-ghost btn-icon btn-sm"
+                  id="btn-watch-minus"
+                >
+                  <IconMinus />
+                </button>
+                <button
+                  onClick={() => handleWatchCountChange(1)}
+                  className="btn btn-ghost btn-icon btn-sm"
+                  id="btn-watch-plus"
+                >
+                  <IconPlus />
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Remove button */}
@@ -266,7 +389,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               className="btn btn-ghost btn-sm"
               id="btn-remove"
             >
-              Quitar de mi lista
+              <IconTrash /> Quitar de mi lista
             </button>
           )}
         </motion.div>
@@ -303,7 +426,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                 >
                   {movie.title}
                 </p>
-                <RatingSlider
+                <RatingPicker
                   value={currentRating}
                   onChange={setCurrentRating}
                 />
@@ -316,7 +439,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                   </button>
                   <button
                     onClick={handleRatingSave}
-                    disabled={saving}
+                    disabled={saving || currentRating === null}
                     className="btn btn-primary"
                     id="btn-save-rating"
                   >
@@ -338,7 +461,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
         {director && (
           <section className={styles.section}>
             <h2 className="section-title">Director</h2>
-            <div className={styles.personChip}>
+            <Link href={`/person/${director.id}`} className={styles.personChip}>
               <div className={styles.personAvatar}>
                 <Image
                   src={getProfileUrl(director.profile_path, "small")}
@@ -350,7 +473,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                 />
               </div>
               <span>{director.name}</span>
-            </div>
+            </Link>
           </section>
         )}
 
@@ -360,7 +483,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
             <h2 className="section-title">Reparto</h2>
             <div className="scroll-row">
               {cast.map((actor) => (
-                <div key={actor.id} className={styles.castCard}>
+                <Link key={actor.id} href={`/person/${actor.id}`} className={styles.castCard}>
                   <div className={styles.castAvatar}>
                     <Image
                       src={getProfileUrl(actor.profile_path, "medium")}
@@ -373,7 +496,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                   </div>
                   <p className={styles.castName}>{actor.name}</p>
                   <p className={styles.castChar}>{actor.character}</p>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

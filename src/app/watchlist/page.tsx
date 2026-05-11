@@ -11,6 +11,21 @@ export const metadata: Metadata = {
   description: "Tu lista de películas pendientes",
 };
 
+/* ---- SVG Icons ---- */
+const IconClock = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const IconClockEmpty = () => (
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
 export default async function WatchlistPage() {
   const movies = await getUserMovies("want_to_watch").catch(() => []);
 
@@ -18,7 +33,7 @@ export default async function WatchlistPage() {
     <div className="page">
       <div className="container">
         <div className="page-header">
-          <h1>⏳ Quiero Ver</h1>
+          <h1><IconClock /> Quiero Ver</h1>
           <p>
             {movies.length > 0
               ? `${movies.length} película${movies.length !== 1 ? "s" : ""} en tu lista`
@@ -41,7 +56,7 @@ export default async function WatchlistPage() {
           </div>
         ) : (
           <div className="empty-state">
-            <div className="icon">⏳</div>
+            <div className="icon"><IconClockEmpty /></div>
             <h3>Nada pendiente</h3>
             <p>
               Busca películas y márcalas como &quot;Quiero Ver&quot; para

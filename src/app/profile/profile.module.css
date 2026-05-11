@@ -74,6 +74,14 @@
   text-align: center;
 }
 
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-xs);
+}
+
 .statValue {
   font-family: var(--font-display);
   font-size: 1.75rem;

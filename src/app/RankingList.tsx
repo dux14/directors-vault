@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getPosterUrl } from "@/lib/tmdb";
+import { ratingToGrade, getRatingColor } from "@/lib/ratings";
 import type { UserMovie } from "@/lib/types";
 import styles from "./RankingList.module.css";
 
@@ -23,6 +24,8 @@ export default function RankingList({ movies }: RankingListProps) {
         const year = movie.movie_release_date
           ? new Date(movie.movie_release_date).getFullYear()
           : null;
+        const grade = ratingToGrade(movie.personal_rating);
+        const gradeColor = getRatingColor(movie.personal_rating);
 
         return (
           <motion.div
@@ -63,13 +66,17 @@ export default function RankingList({ movies }: RankingListProps) {
                 {year && <span className={styles.year}>{year}</span>}
               </div>
 
-              {/* User Rating */}
-              <div className={styles.rating}>
-                <span className={styles.ratingValue}>
-                  {movie.personal_rating?.toFixed(1)}
-                </span>
-                <span className={styles.ratingStar}>⭐</span>
-              </div>
+              {/* User Rating — Letter Grade */}
+              {grade && (
+                <div className={styles.rating}>
+                  <span
+                    className={styles.ratingValue}
+                    style={{ color: gradeColor }}
+                  >
+                    {grade}
+                  </span>
+                </div>
+              )}
             </Link>
           </motion.div>
         );

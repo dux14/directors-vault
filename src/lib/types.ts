@@ -17,8 +17,10 @@ export interface UserMovie {
   user_id: string;
   tmdb_movie_id: number;
   status: MovieStatus;
+  /** Letter grade stored as integer: 8=S, 7=A+, 6=A, 5=B, 4=C, 3=D, 2=E, 1=F */
   personal_rating: number | null;
   review_notes: string | null;
+  watch_count: number;
   watched_at: string | null;
   created_at: string;
   updated_at: string;

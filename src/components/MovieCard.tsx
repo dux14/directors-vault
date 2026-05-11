@@ -9,6 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getPosterUrl } from "@/lib/tmdb";
+import { ratingToGrade, getRatingColor } from "@/lib/ratings";
 import type { MovieStatus } from "@/lib/types";
 import styles from "./MovieCard.module.css";
 
@@ -38,6 +39,8 @@ export default function MovieCard({
   size = "medium",
 }: MovieCardProps) {
   const year = releaseDate ? new Date(releaseDate).getFullYear() : null;
+  const grade = userRating ? ratingToGrade(userRating) : null;
+  const gradeColor = userRating ? getRatingColor(userRating) : null;
 
   return (
     <motion.div
@@ -82,9 +85,12 @@ export default function MovieCard({
           <div className={styles.overlay}>
             <p className={styles.overlayTitle}>{title}</p>
             {year && <p className={styles.overlayYear}>{year}</p>}
-            {userRating && (
-              <div className={styles.overlayRating}>
-                <span>⭐</span> {userRating.toFixed(1)}
+            {grade && (
+              <div
+                className={styles.overlayRating}
+                style={{ color: gradeColor || undefined }}
+              >
+                {grade}
               </div>
             )}
           </div>

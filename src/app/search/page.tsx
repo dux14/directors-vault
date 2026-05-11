@@ -9,6 +9,34 @@ import { searchMovies, getTrending, type TMDBMovie } from "@/lib/tmdb";
 import MovieCard from "@/components/MovieCard";
 import styles from "./search.module.css";
 
+/* ---- SVG Icons ---- */
+const IconSearch = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
+  </svg>
+);
+
+const IconX = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const IconFlame = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+  </svg>
+);
+
+const IconSearchEmpty = () => (
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
+  </svg>
+);
+
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<TMDBMovie[]>([]);
@@ -50,7 +78,7 @@ export default function SearchPage() {
   const displayMovies = searched ? results : trending;
   const title = searched
     ? `${results.length} resultado${results.length !== 1 ? "s" : ""}`
-    : "🔥 Popular hoy";
+    : <><IconFlame /> Popular hoy</>;
 
   return (
     <div className="page">
@@ -58,19 +86,7 @@ export default function SearchPage() {
         {/* Search Input */}
         <div className={styles.searchWrapper}>
           <div className={styles.searchIcon}>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
+            <IconSearch />
           </div>
           <input
             type="text"
@@ -87,7 +103,7 @@ export default function SearchPage() {
               className={styles.clearBtn}
               id="clear-search"
             >
-              ✕
+              <IconX />
             </button>
           )}
         </div>
@@ -127,7 +143,7 @@ export default function SearchPage() {
         {/* No results */}
         {!loading && searched && results.length === 0 && (
           <div className="empty-state">
-            <div className="icon">🔍</div>
+            <div className="icon"><IconSearchEmpty /></div>
             <h3>Sin resultados</h3>
             <p>No encontramos películas para &quot;{query}&quot;</p>
           </div>

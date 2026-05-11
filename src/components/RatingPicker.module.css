@@ -1,0 +1,80 @@
+/* ============================================
+ * RatingPicker Styles
+ * ============================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 360px;
+}
+
+.gradeBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: var(--space-sm) var(--space-xs);
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 64px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gradeBtn:hover:not(:disabled) {
+  background: var(--grade-bg);
+  border-color: var(--grade-color);
+}
+
+.gradeBtn.selected {
+  background: var(--grade-bg);
+  border-color: var(--grade-color);
+  box-shadow: 0 0 16px var(--grade-bg), 0 0 4px var(--grade-bg);
+}
+
+.gradeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gradeLetter {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--grade-color);
+  line-height: 1;
+}
+
+.gradeLabel {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.gradeBtn.selected .gradeLabel {
+  color: var(--grade-color);
+}
+
+/* Responsive: 2 columns on very small screens */
+@media (max-width: 320px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

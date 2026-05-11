@@ -593,7 +593,7 @@ a:hover {
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
-  z-index: var(--z-modal);
+  z-index: var(--z-overlay);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -603,6 +603,7 @@ a:hover {
   background: var(--bg-secondary);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding: var(--space-xl);
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-xl));
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
