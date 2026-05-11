@@ -128,6 +128,45 @@ export interface TMDBPersonCredits {
   crew: (TMDBMovie & { job: string; department: string })[];
 }
 
+export interface TMDBPerson {
+  id: number;
+  name: string;
+  profile_path: string | null;
+  known_for_department: string;
+  popularity: number;
+  biography?: string;
+  birthday?: string | null;
+  deathday?: string | null;
+  place_of_birth?: string | null;
+  also_known_as?: string[];
+  gender: number;
+  known_for?: TMDBMovie[];
+}
+
+export interface TMDBPersonSearchResult {
+  id: number;
+  name: string;
+  profile_path: string | null;
+  known_for_department: string;
+  popularity: number;
+  known_for: TMDBMovie[];
+  media_type: "person";
+}
+
+export interface TMDBMultiSearchResponse {
+  page: number;
+  results: (TMDBMovie & { media_type: "movie" } | TMDBPersonSearchResult)[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface TMDBPersonSearchResponse {
+  page: number;
+  results: TMDBPersonSearchResult[];
+  total_pages: number;
+  total_results: number;
+}
+
 // ---- In-Memory Cache ----
 
 interface CacheEntry<T> {
@@ -297,4 +336,58 @@ export function getProfileUrl(
 ): string {
   if (!path) return "/placeholder-profile.svg";
   return `${IMAGE_SIZES.profile[size]}${path}`;
+}
+
+/** Multi-search: movies + people in a single query */
+export async function searchMulti(
+  query: string,
+  page: number = 1
+): Promise<TMDBMultiSearchResponse> {
+  if (!query.trim()) {
+    return { page: 1, results: [], total_pages: 0, total_results: 0 };
+  }
+  return tmdbFetch<TMDBMultiSearchResponse>("/search/multi", {
+    query: query.trim(),
+    page: page.toString(),
+    include_adult: "false",
+  });
+}
+
+/** Search for people only */
+export async function searchPerson(
+  query: string,
+  page: number = 1
+): Promise<TMDBPersonSearchResponse> {
+  if (!query.trim()) {
+    return { page: 1, results: [], total_pages: 0, total_results: 0 };
+  }
+  return tmdbFetch<TMDBPersonSearchResponse>("/search/person", {
+    query: query.trim(),
+    page: page.toString(),
+  });
+}
+
+/** Get person details */
+export async function getPersonDetail(
+  personId: number
+): Promise<TMDBPerson> {
+  return tmdbFetch<TMDBPerson>(`/person/${personId}`);
+}
+
+/** Get now playing movies */
+export async function getNowPlaying(
+  page: number = 1
+): Promise<TMDBSearchResponse> {
+  return tmdbFetch<TMDBSearchResponse>("/movie/now_playing", {
+    page: page.toString(),
+  });
+}
+
+/** Get top rated movies of all time */
+export async function getTopRated(
+  page: number = 1
+): Promise<TMDBSearchResponse> {
+  return tmdbFetch<TMDBSearchResponse>("/movie/top_rated", {
+    page: page.toString(),
+  });
 }

@@ -3,53 +3,90 @@
  * ============================================ */
 
 .searchWrapper {
-  position: sticky;
-  top: 0;
-  padding: var(--space-lg) 0 var(--space-md);
-  background: var(--bg-primary);
-  z-index: var(--z-sticky);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+  position: relative;
+  margin-bottom: var(--space-md);
+  padding-top: var(--space-lg);
 }
 
 .searchIcon {
   position: absolute;
   left: var(--space-md);
+  top: 50%;
+  transform: translateY(-15%);
   color: var(--text-tertiary);
+  pointer-events: none;
   display: flex;
   align-items: center;
-  pointer-events: none;
 }
 
 .searchInput {
-  padding-left: 2.75rem;
-  padding-right: 2.5rem;
-  font-size: 1rem;
-  border-radius: var(--radius-lg);
-  background: var(--bg-card);
-}
-
-.searchInput:focus {
-  background: var(--bg-secondary);
+  padding-left: 2.75rem !important;
+  padding-right: 2.75rem !important;
+  border-radius: var(--radius-full) !important;
+  background: var(--bg-card) !important;
 }
 
 .clearBtn {
   position: absolute;
-  right: var(--space-md);
-  background: none;
+  right: var(--space-sm);
+  top: 50%;
+  transform: translateY(-15%);
+  background: var(--bg-tertiary);
   border: none;
-  color: var(--text-tertiary);
-  font-size: 1rem;
-  cursor: pointer;
-  padding: var(--space-xs);
+  border-radius: var(--radius-full);
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  transition: color var(--transition-fast);
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
 }
 
 .clearBtn:hover {
+  background: var(--bg-elevated);
   color: var(--text-primary);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-lg);
+  padding: 4px;
+  background: var(--bg-card);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 0.625rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab:hover {
+  color: var(--text-secondary);
+}
+
+.tabActive {
+  background: var(--bg-tertiary);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .resultsHeader {
@@ -59,4 +96,64 @@
 .skeletonCard {
   border-radius: var(--radius-md);
   overflow: hidden;
+}
+
+/* Person results grid */
+.personGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.personCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.personCard:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-accent);
+}
+
+.personAvatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  flex-shrink: 0;
+}
+
+.personInfo {
+  min-width: 0;
+}
+
+.personName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.personDept {
+  font-size: 0.8125rem;
+  color: var(--accent-primary);
+  font-weight: 500;
+}
+
+.personKnownFor {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
