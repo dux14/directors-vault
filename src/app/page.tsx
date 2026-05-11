@@ -1,12 +1,12 @@
 /* ============================================
- * Home Page — Personal Movie Ranking
- * Shows watched movies sorted by personal rating
+ * Home Page — Personal Movie Ranking + Discovery Feed
+ * Netflix-style rows: Trending, Now Playing, Top Rated
  * ============================================ */
 
 import { getRankedMovies } from "@/lib/actions";
-import { getTrending } from "@/lib/tmdb";
+import { getTrending, getNowPlaying, getTopRated } from "@/lib/tmdb";
 import RankingList from "./RankingList";
-import TrendingRow from "./TrendingRow";
+import MovieRow from "@/components/MovieRow";
 import styles from "./page.module.css";
 
 /* ---- SVG Icons ---- */
@@ -35,10 +35,32 @@ const IconFilm = () => (
   </svg>
 );
 
+const IconPlay = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
+    <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+);
+
+const IconTrophy = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);
+
 export default async function HomePage() {
-  const [rankedMovies, trending] = await Promise.all([
+  // Fetch random page for top_rated to keep it fresh
+  const randomPage = Math.floor(Math.random() * 10) + 1;
+
+  const [rankedMovies, trending, nowPlaying, topRated] = await Promise.all([
     getRankedMovies().catch(() => []),
     getTrending("week").catch(() => ({ results: [] })),
+    getNowPlaying().catch(() => ({ results: [] })),
+    getTopRated(randomPage).catch(() => ({ results: [] })),
   ]);
 
   return (
@@ -56,13 +78,33 @@ export default async function HomePage() {
           </p>
         </div>
 
-        {/* Trending Discovery */}
+        {/* Trending Weekly */}
         {trending.results.length > 0 && (
           <section className="section">
             <div className="section-header">
               <h2 className="section-title"><IconFlame /> Trending esta semana</h2>
             </div>
-            <TrendingRow movies={trending.results.slice(0, 12)} />
+            <MovieRow movies={trending.results.slice(0, 12)} />
+          </section>
+        )}
+
+        {/* Now Playing */}
+        {nowPlaying.results.length > 0 && (
+          <section className="section">
+            <div className="section-header">
+              <h2 className="section-title"><IconPlay /> Estrenos Recientes</h2>
+            </div>
+            <MovieRow movies={nowPlaying.results.slice(0, 12)} />
+          </section>
+        )}
+
+        {/* Top Rated All Time */}
+        {topRated.results.length > 0 && (
+          <section className="section">
+            <div className="section-header">
+              <h2 className="section-title"><IconTrophy /> Mejores de la Historia</h2>
+            </div>
+            <MovieRow movies={topRated.results.slice(0, 12)} />
           </section>
         )}
 
