@@ -72,17 +72,21 @@ export async function searchUserByEmail(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_profiles")
     .select("*")
-    .eq("email", email.trim().toLowerCase())
+    .ilike("email", email.trim())
     .neq("id", user.id) // Don't find yourself
-    .single();
+    .maybeSingle();
 
+  if (error) {
+    console.error("searchUserByEmail error:", error.message);
+    return null;
+  }
   return data as UserPublicProfile | null;
 }
 
-/** Search for a user by friend code */
+/** Search for a user by friend code (prefix match — we show only 8 chars) */
 export async function searchUserByFriendCode(
   code: string
 ): Promise<UserPublicProfile | null> {
@@ -90,13 +94,21 @@ export async function searchUserByFriendCode(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data } = await supabase
+  const trimmed = code.trim().toLowerCase();
+  if (trimmed.length < 4) return null; // Too short to search
+
+  // Try exact match first, then prefix match
+  const { data, error } = await supabase
     .from("user_profiles")
     .select("*")
-    .eq("friend_code", code.trim())
+    .ilike("friend_code", `${trimmed}%`)
     .neq("id", user.id)
-    .single();
+    .maybeSingle();
 
+  if (error) {
+    console.error("searchUserByFriendCode error:", error.message);
+    return null;
+  }
   return data as UserPublicProfile | null;
 }
 
