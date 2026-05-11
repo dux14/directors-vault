@@ -115,6 +115,41 @@
   color: var(--text-secondary);
 }
 
+.quickLinks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.quickLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.quickLink:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-accent);
+  color: var(--accent-primary);
+}
+
+@media (min-width: 768px) {
+  .quickLinks {
+    display: none; /* Hidden on desktop where sidebar has these links */
+  }
+}
+
 .signOutBtn {
   width: 100%;
   color: var(--status-not-interested);

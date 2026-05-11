@@ -1,0 +1,233 @@
+/* ============================================
+ * Social Page Styles
+ * ============================================ */
+
+.friendCodeCard {
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  text-align: center;
+}
+
+.codeSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.codeLabel {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.codeDisplay {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.code {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.copyBtn {
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.copyBtn:hover {
+  background: var(--bg-elevated);
+  color: var(--accent-primary);
+}
+
+.codeHint {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.section {
+  margin-bottom: var(--space-xl);
+}
+
+.searchTabs {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.searchTabs button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.searchRow {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.searchInput {
+  flex: 1;
+}
+
+.errorMsg {
+  font-size: 0.8125rem;
+  color: var(--status-not-interested);
+  margin-top: var(--space-xs);
+}
+
+/* Search Result */
+.resultCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-md);
+}
+
+.resultAvatar,
+.friendAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+}
+
+.resultInfo,
+.friendInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.resultName h3,
+.friendInfo h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.resultEmail,
+.friendEmail {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Friend List */
+.friendList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.friendCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.friendCard:hover {
+  border-color: var(--border-accent);
+}
+
+.friendCard.pending {
+  opacity: 0.7;
+}
+
+.friendLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.friendLink:hover h3 {
+  color: var(--accent-primary);
+}
+
+.friendActions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.acceptBtn,
+.rejectBtn,
+.removeBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.acceptBtn {
+  color: var(--status-watched);
+}
+
+.acceptBtn:hover {
+  background: var(--status-watched);
+  color: white;
+  border-color: var(--status-watched);
+}
+
+.rejectBtn,
+.removeBtn {
+  color: var(--text-tertiary);
+}
+
+.rejectBtn:hover,
+.removeBtn:hover {
+  background: var(--status-not-interested);
+  color: white;
+  border-color: var(--status-not-interested);
+}

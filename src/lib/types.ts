@@ -64,3 +64,39 @@ export interface UserProfile {
 export interface RankedMovie extends UserMovie {
   rank: number;
 }
+
+// ---- Social Types ----
+
+export type FriendshipStatus = "pending" | "accepted" | "rejected";
+
+export interface UserPublicProfile {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  email: string;
+  friend_code: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Friendship {
+  id: string;
+  requester_id: string;
+  addressee_id: string;
+  status: FriendshipStatus;
+  created_at: string;
+  updated_at: string;
+  // Joined profile data
+  profile?: UserPublicProfile;
+}
+
+export interface CollectionMember {
+  id: string;
+  collection_id: string;
+  user_id: string;
+  role: "owner" | "member";
+  added_at: string;
+  profile?: UserPublicProfile;
+}
+
