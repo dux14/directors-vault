@@ -7,6 +7,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/context";
 import LanguageSwitcher from "./LanguageSwitcher";
 import styles from "./Sidebar.module.css";
 
@@ -57,18 +58,19 @@ const IconFilm = () => (
   </svg>
 );
 
-const navItems = [
-  { href: "/", label: "Mi Ranking", icon: <IconStar /> },
-  { href: "/search", label: "Buscar Películas", icon: <IconSearch /> },
-  { href: "/watchlist", label: "Quiero Ver", icon: <IconClock /> },
-  { href: "/collections", label: "Colecciones", icon: <IconFolder /> },
-  { href: "/profile", label: "Mi Perfil", icon: <IconUser /> },
-];
-
 export default function Sidebar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   if (pathname === "/login") return null;
+
+  const navItems = [
+    { href: "/", label: t("nav.ranking"), icon: <IconStar /> },
+    { href: "/search", label: t("nav.search"), icon: <IconSearch /> },
+    { href: "/watchlist", label: t("nav.watchlist"), icon: <IconClock /> },
+    { href: "/collections", label: t("nav.collections"), icon: <IconFolder /> },
+    { href: "/profile", label: t("nav.profile"), icon: <IconUser /> },
+  ];
 
   return (
     <aside className={styles.sidebar} id="desktop-sidebar">

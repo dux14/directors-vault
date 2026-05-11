@@ -7,6 +7,8 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
+import { useTranslation } from "@/lib/i18n/context";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import type { User } from "@supabase/supabase-js";
 import styles from "./profile.module.css";
 
@@ -54,6 +56,14 @@ const IconXCircle = () => (
   </svg>
 );
 
+const IconGlobe = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+);
+
 interface Props {
   user: User | null;
   stats: {
@@ -67,6 +77,7 @@ interface Props {
 export default function ProfileClient({ user, stats }: Props) {
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -86,7 +97,7 @@ export default function ProfileClient({ user, stats }: Props) {
     <div className="page">
       <div className="container">
         <div className="page-header">
-          <h1><IconUser /> Mi Perfil</h1>
+          <h1><IconUser /> {t("profile.title")}</h1>
         </div>
 
         {/* User Info */}
@@ -106,7 +117,7 @@ export default function ProfileClient({ user, stats }: Props) {
           </div>
           <div className={styles.userInfo}>
             <h2 className={styles.userName}>
-              {user?.user_metadata?.full_name || user?.email || "Usuario"}
+              {user?.user_metadata?.full_name || user?.email || t("profile.user")}
             </h2>
             <p className={styles.userEmail}>{user?.email}</p>
           </div>
@@ -117,25 +128,33 @@ export default function ProfileClient({ user, stats }: Props) {
           <div className={styles.statCard}>
             <span className={styles.statIcon}><IconEye /></span>
             <span className={styles.statValue}>{stats.watched}</span>
-            <span className={styles.statLabel}>Vistas</span>
+            <span className={styles.statLabel}>{t("profile.watched")}</span>
           </div>
           <div className={styles.statCard}>
             <span className={styles.statIcon}><IconClock /></span>
             <span className={styles.statValue}>{stats.watchlist}</span>
-            <span className={styles.statLabel}>Pendientes</span>
+            <span className={styles.statLabel}>{t("profile.pending")}</span>
           </div>
           <div className={styles.statCard}>
             <span className={styles.statIcon}><IconStar /></span>
             <span className={styles.statValue} style={{ color: avgColor }}>
               {avgGrade || "—"}
             </span>
-            <span className={styles.statLabel}>Promedio</span>
+            <span className={styles.statLabel}>{t("profile.average")}</span>
           </div>
           <div className={styles.statCard}>
             <span className={styles.statIcon}><IconXCircle /></span>
             <span className={styles.statValue}>{stats.notInterested}</span>
-            <span className={styles.statLabel}>No interesadas</span>
+            <span className={styles.statLabel}>{t("profile.notInterested")}</span>
           </div>
+        </div>
+
+        {/* Language Selector */}
+        <div className={styles.settingsSection}>
+          <h3 className={styles.settingsTitle}>
+            <IconGlobe /> {t("general.language")}
+          </h3>
+          <LanguageSwitcher variant="full" />
         </div>
 
         {/* Sign out */}
@@ -144,7 +163,7 @@ export default function ProfileClient({ user, stats }: Props) {
           className={`btn btn-secondary ${styles.signOutBtn}`}
           id="sign-out-btn"
         >
-          <IconLogOut /> Cerrar Sesión
+          <IconLogOut /> {t("profile.signOut")}
         </button>
       </div>
     </div>

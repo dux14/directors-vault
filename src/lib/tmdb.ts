@@ -195,7 +195,8 @@ function setCache<T>(key: string, data: T): void {
 
 async function tmdbFetch<T>(
   endpoint: string,
-  params: Record<string, string> = {}
+  params: Record<string, string> = {},
+  language: string = "es-MX"
 ): Promise<T> {
   const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
   if (!apiKey) {
@@ -204,7 +205,7 @@ async function tmdbFetch<T>(
 
   const searchParams = new URLSearchParams({
     api_key: apiKey,
-    language: "es-MX",
+    language,
     ...params,
   });
 
@@ -223,7 +224,7 @@ async function tmdbFetch<T>(
     if (response.status === 429) {
       // Rate limited — wait and retry once
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      return tmdbFetch<T>(endpoint, params);
+      return tmdbFetch<T>(endpoint, params, language);
     }
     throw new Error(`TMDB API error: ${response.status} ${response.statusText}`);
   }
@@ -238,7 +239,8 @@ async function tmdbFetch<T>(
 /** Search movies by query text */
 export async function searchMovies(
   query: string,
-  page: number = 1
+  page: number = 1,
+  locale?: string
 ): Promise<TMDBSearchResponse> {
   if (!query.trim()) {
     return { page: 1, results: [], total_pages: 0, total_results: 0 };
@@ -247,22 +249,23 @@ export async function searchMovies(
     query: query.trim(),
     page: page.toString(),
     include_adult: "false",
-  });
+  }, locale);
 }
 
 /** Get full movie details with credits, similar, recommendations, and videos */
 export async function getMovieDetail(
-  movieId: number
+  movieId: number,
+  locale?: string
 ): Promise<TMDBMovieDetail> {
   return tmdbFetch<TMDBMovieDetail>(`/movie/${movieId}`, {
     append_to_response: "credits,similar,recommendations,videos",
-  });
+  }, locale);
 }
 
 /** Get list of all movie genres */
-export async function getGenres(): Promise<TMDBGenre[]> {
+export async function getGenres(locale?: string): Promise<TMDBGenre[]> {
   const response = await tmdbFetch<{ genres: TMDBGenre[] }>(
-    "/genre/movie/list"
+    "/genre/movie/list", {}, locale
   );
   return response.genres;
 }
@@ -275,7 +278,8 @@ export async function discoverMovies(
     with_genres?: string;
     year?: number;
     "vote_average.gte"?: number;
-  } = {}
+  } = {},
+  locale?: string
 ): Promise<TMDBSearchResponse> {
   const queryParams: Record<string, string> = {
     page: (params.page || 1).toString(),
@@ -287,28 +291,31 @@ export async function discoverMovies(
   if (params["vote_average.gte"])
     queryParams["vote_average.gte"] = params["vote_average.gte"].toString();
 
-  return tmdbFetch<TMDBSearchResponse>("/discover/movie", queryParams);
+  return tmdbFetch<TMDBSearchResponse>("/discover/movie", queryParams, locale);
 }
 
 /** Get trending movies */
 export async function getTrending(
-  timeWindow: "day" | "week" = "week"
+  timeWindow: "day" | "week" = "week",
+  locale?: string
 ): Promise<TMDBSearchResponse> {
-  return tmdbFetch<TMDBSearchResponse>(`/trending/movie/${timeWindow}`);
+  return tmdbFetch<TMDBSearchResponse>(`/trending/movie/${timeWindow}`, {}, locale);
 }
 
 /** Get a TMDB collection (saga/franchise) */
 export async function getCollection(
-  collectionId: number
+  collectionId: number,
+  locale?: string
 ): Promise<TMDBCollectionDetail> {
-  return tmdbFetch<TMDBCollectionDetail>(`/collection/${collectionId}`);
+  return tmdbFetch<TMDBCollectionDetail>(`/collection/${collectionId}`, {}, locale);
 }
 
 /** Get a person's movie credits */
 export async function getPersonMovieCredits(
-  personId: number
+  personId: number,
+  locale?: string
 ): Promise<TMDBPersonCredits> {
-  return tmdbFetch<TMDBPersonCredits>(`/person/${personId}/movie_credits`);
+  return tmdbFetch<TMDBPersonCredits>(`/person/${personId}/movie_credits`, {}, locale);
 }
 
 /** Get poster URL with fallback */
@@ -341,7 +348,8 @@ export function getProfileUrl(
 /** Multi-search: movies + people in a single query */
 export async function searchMulti(
   query: string,
-  page: number = 1
+  page: number = 1,
+  locale?: string
 ): Promise<TMDBMultiSearchResponse> {
   if (!query.trim()) {
     return { page: 1, results: [], total_pages: 0, total_results: 0 };
@@ -350,13 +358,14 @@ export async function searchMulti(
     query: query.trim(),
     page: page.toString(),
     include_adult: "false",
-  });
+  }, locale);
 }
 
 /** Search for people only */
 export async function searchPerson(
   query: string,
-  page: number = 1
+  page: number = 1,
+  locale?: string
 ): Promise<TMDBPersonSearchResponse> {
   if (!query.trim()) {
     return { page: 1, results: [], total_pages: 0, total_results: 0 };
@@ -364,30 +373,42 @@ export async function searchPerson(
   return tmdbFetch<TMDBPersonSearchResponse>("/search/person", {
     query: query.trim(),
     page: page.toString(),
-  });
+  }, locale);
 }
 
 /** Get person details */
 export async function getPersonDetail(
-  personId: number
+  personId: number,
+  locale?: string
 ): Promise<TMDBPerson> {
-  return tmdbFetch<TMDBPerson>(`/person/${personId}`);
+  return tmdbFetch<TMDBPerson>(`/person/${personId}`, {}, locale);
 }
 
 /** Get now playing movies */
 export async function getNowPlaying(
-  page: number = 1
+  page: number = 1,
+  locale?: string
 ): Promise<TMDBSearchResponse> {
   return tmdbFetch<TMDBSearchResponse>("/movie/now_playing", {
     page: page.toString(),
-  });
+  }, locale);
 }
 
 /** Get top rated movies of all time */
 export async function getTopRated(
-  page: number = 1
+  page: number = 1,
+  locale?: string
 ): Promise<TMDBSearchResponse> {
   return tmdbFetch<TMDBSearchResponse>("/movie/top_rated", {
     page: page.toString(),
-  });
+  }, locale);
 }
+
+/** Get movie recommendations */
+export async function getMovieRecommendations(
+  movieId: number,
+  locale?: string
+): Promise<TMDBSearchResponse> {
+  return tmdbFetch<TMDBSearchResponse>(`/movie/${movieId}/recommendations`, {}, locale);
+}
+

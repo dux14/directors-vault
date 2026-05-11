@@ -5,6 +5,7 @@
 
 import { getRankedMovies } from "@/lib/actions";
 import { getTrending, getNowPlaying, getTopRated } from "@/lib/tmdb";
+import { getServerTmdbLocale } from "@/lib/i18n/server";
 import RankingList from "./RankingList";
 import MovieRow from "@/components/MovieRow";
 import styles from "./page.module.css";
@@ -53,20 +54,19 @@ const IconTrophy = () => (
 );
 
 export default async function HomePage() {
-  // Fetch random page for top_rated to keep it fresh
+  const locale = await getServerTmdbLocale();
   const randomPage = Math.floor(Math.random() * 10) + 1;
 
   const [rankedMovies, trending, nowPlaying, topRated] = await Promise.all([
     getRankedMovies().catch(() => []),
-    getTrending("week").catch(() => ({ results: [] })),
-    getNowPlaying().catch(() => ({ results: [] })),
-    getTopRated(randomPage).catch(() => ({ results: [] })),
+    getTrending("week", locale).catch(() => ({ results: [] })),
+    getNowPlaying(1, locale).catch(() => ({ results: [] })),
+    getTopRated(randomPage, locale).catch(() => ({ results: [] })),
   ]);
 
   return (
     <div className="page">
       <div className="container">
-        {/* Header */}
         <div className={`page-header ${styles.header}`}>
           <h1>
             <span className={styles.accent}>Mi</span> Ranking
@@ -78,7 +78,6 @@ export default async function HomePage() {
           </p>
         </div>
 
-        {/* Trending Weekly */}
         {trending.results.length > 0 && (
           <section className="section">
             <div className="section-header">
@@ -88,7 +87,6 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Now Playing */}
         {nowPlaying.results.length > 0 && (
           <section className="section">
             <div className="section-header">
@@ -98,7 +96,6 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Top Rated All Time */}
         {topRated.results.length > 0 && (
           <section className="section">
             <div className="section-header">
@@ -108,7 +105,6 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Personal Ranking */}
         <section className="section">
           <div className="section-header">
             <h2 className="section-title"><IconStar /> Mi Top Películas</h2>

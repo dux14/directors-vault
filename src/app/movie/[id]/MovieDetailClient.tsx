@@ -23,6 +23,7 @@ import {
   updateWatchCount,
 } from "@/lib/actions";
 import { ratingToGrade, getRatingColor, getRatingDef } from "@/lib/ratings";
+import { useTranslation } from "@/lib/i18n/context";
 import type { UserMovie, MovieStatus } from "@/lib/types";
 import RatingPicker from "@/components/RatingPicker";
 import MovieCard from "@/components/MovieCard";
@@ -97,6 +98,7 @@ interface Props {
 export default function MovieDetailClient({ movie, userMovie }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslation();
   const [currentStatus, setCurrentStatus] = useState<MovieStatus | null>(
     userMovie?.status || null
   );
@@ -285,11 +287,11 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                 }`}
               >
                 {currentStatus === "watched" ? (
-                  <><IconCheck /> Vista</>
+                  <><IconCheck /> {t("movie.watched")}</>
                 ) : currentStatus === "want_to_watch" ? (
-                  <><IconClock /> Pendiente</>
+                  <><IconClock /> {t("movie.pending")}</>
                 ) : (
-                  <><IconX /> No interesada</>
+                  <><IconX /> {t("movie.notInterestedStatus")}</>
                 )}
               </span>
               {ratingDef && (
@@ -312,7 +314,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               }`}
               id="btn-watched"
             >
-              <IconCheck /> Vista
+              <IconCheck /> {t("movie.watched")}
             </button>
             <button
               onClick={() => handleStatusChange("want_to_watch")}
@@ -324,7 +326,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               }`}
               id="btn-watchlist"
             >
-              <IconClock /> Quiero Ver
+              <IconClock /> {t("movie.wantToWatch")}
             </button>
             <button
               onClick={() => handleStatusChange("not_interested")}
@@ -336,7 +338,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               }`}
               id="btn-not-interested"
             >
-              <IconX /> No
+              <IconX /> {t("movie.notInterested")}
             </button>
           </div>
 
@@ -348,9 +350,9 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               id="btn-rate"
             >
               {userMovie?.personal_rating ? (
-                <><IconEdit /> Editar Rating</>
+                <><IconEdit /> {t("movie.editRating")}</>
               ) : (
-                <><IconStar /> Calificar</>
+                <><IconStar /> {t("movie.rate")}</>
               )}
             </button>
           )}
@@ -359,7 +361,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
           {currentStatus === "watched" && (
             <div className={styles.watchCount}>
               <span className={styles.watchCountLabel}>
-                <IconEye /> Visto {watchCount} {watchCount === 1 ? "vez" : "veces"}
+                <IconEye /> {t("movie.watchedCount", { count: watchCount, unit: watchCount === 1 ? t("movie.time") : t("movie.times") })}
               </span>
               <div className={styles.watchCountControls}>
                 <button
@@ -389,7 +391,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               className="btn btn-ghost btn-sm"
               id="btn-remove"
             >
-              <IconTrash /> Quitar de mi lista
+              <IconTrash /> {t("movie.removeFromList")}
             </button>
           )}
         </motion.div>
@@ -414,7 +416,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               >
                 <div className="modal-handle" />
                 <h3 style={{ textAlign: "center", marginBottom: "0.5rem" }}>
-                  Califica esta película
+                  {t("movie.rateTitle")}
                 </h3>
                 <p
                   style={{
@@ -435,7 +437,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                     onClick={() => setShowRating(false)}
                     className="btn btn-ghost"
                   >
-                    Cancelar
+                    {t("movie.cancel")}
                   </button>
                   <button
                     onClick={handleRatingSave}
@@ -443,7 +445,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                     className="btn btn-primary"
                     id="btn-save-rating"
                   >
-                    {saving ? "Guardando..." : "Guardar"}
+                    {saving ? t("movie.saving") : t("movie.save")}
                   </button>
                 </div>
               </motion.div>
@@ -453,14 +455,14 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
 
         {/* Overview */}
         <section className={styles.section}>
-          <h2 className="section-title">Sinopsis</h2>
-          <p className={styles.overview}>{movie.overview || "Sin sinopsis disponible."}</p>
+          <h2 className="section-title">{t("movie.synopsis")}</h2>
+          <p className={styles.overview}>{movie.overview || t("movie.noSynopsis")}</p>
         </section>
 
         {/* Director */}
         {director && (
           <section className={styles.section}>
-            <h2 className="section-title">Director</h2>
+            <h2 className="section-title">{t("movie.director")}</h2>
             <Link href={`/person/${director.id}`} className={styles.personChip}>
               <div className={styles.personAvatar}>
                 <Image
@@ -480,7 +482,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
         {/* Cast */}
         {cast.length > 0 && (
           <section className={styles.section}>
-            <h2 className="section-title">Reparto</h2>
+            <h2 className="section-title">{t("movie.cast")}</h2>
             <div className="scroll-row">
               {cast.map((actor) => (
                 <Link key={actor.id} href={`/person/${actor.id}`} className={styles.castCard}>
@@ -506,7 +508,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
         {movie.recommendations?.results &&
           movie.recommendations.results.length > 0 && (
             <section className={styles.section}>
-              <h2 className="section-title">Recomendadas</h2>
+              <h2 className="section-title">{t("movie.recommended")}</h2>
               <div className="scroll-row">
                 {movie.recommendations.results.slice(0, 10).map((rec) => (
                   <div key={rec.id} style={{ width: 130 }}>

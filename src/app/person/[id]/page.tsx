@@ -4,6 +4,7 @@
  * ============================================ */
 
 import { getPersonDetail, getPersonMovieCredits } from "@/lib/tmdb";
+import { getServerTmdbLocale } from "@/lib/i18n/server";
 import PersonDetailClient from "./PersonDetailClient";
 import type { Metadata } from "next";
 
@@ -13,8 +14,9 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  const locale = await getServerTmdbLocale();
   try {
-    const person = await getPersonDetail(parseInt(id));
+    const person = await getPersonDetail(parseInt(id), locale);
     return {
       title: person.name,
       description: person.biography?.slice(0, 160) || `Filmografía de ${person.name}`,
@@ -27,10 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PersonDetailPage({ params }: Props) {
   const { id } = await params;
   const personId = parseInt(id);
+  const locale = await getServerTmdbLocale();
 
   const [person, credits] = await Promise.all([
-    getPersonDetail(personId),
-    getPersonMovieCredits(personId),
+    getPersonDetail(personId, locale),
+    getPersonMovieCredits(personId, locale),
   ]);
 
   return <PersonDetailClient person={person} credits={credits} />;
