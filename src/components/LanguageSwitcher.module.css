@@ -1,0 +1,62 @@
+/* ============================================
+ * LanguageSwitcher Styles
+ * ============================================ */
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggle:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-accent);
+  color: var(--accent-primary);
+}
+
+.toggleLabel {
+  letter-spacing: 0.5px;
+}
+
+.fullWrapper {
+  display: flex;
+  gap: 0.25rem;
+  padding: 3px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+}
+
+.langBtn {
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.langBtn:hover {
+  color: var(--text-secondary);
+}
+
+.langBtn.active {
+  background: var(--bg-elevated);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
+}

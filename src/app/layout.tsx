@@ -7,6 +7,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
+import { LanguageProvider } from "@/lib/i18n/context";
 
 export const metadata: Metadata = {
   title: {
@@ -35,9 +36,11 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        <Sidebar />
-        <main className="main-content">{children}</main>
-        <BottomNav />
+        <LanguageProvider>
+          <Sidebar />
+          <main className="main-content">{children}</main>
+          <BottomNav />
+        </LanguageProvider>
       </body>
     </html>
   );
