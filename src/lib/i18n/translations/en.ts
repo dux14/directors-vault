@@ -81,6 +81,15 @@ const en: Record<string, string> = {
   "collections.type.actor": "Actor",
   "collections.type.genre": "Genre",
 
+  // Collection Detail (shared)
+  "collectionDetail.back": "Collections",
+  "collectionDetail.shared": "Shared",
+  "collectionDetail.members": "Members",
+  "collectionDetail.owner": "owner",
+  "collectionDetail.invite": "Invite Friend",
+  "collectionDetail.empty": "Empty collection",
+  "collectionDetail.emptyDesc": "Search for movies and add them to this collection from their detail page.",
+
   // Profile
   "profile.title": "My Profile",
   "profile.watched": "Watched",
@@ -101,6 +110,54 @@ const en: Record<string, string> = {
   "person.showMore": "Show more",
   "person.showLess": "Show less",
   "person.noMovies": "No movies for this filter",
+  "person.exportCollection": "Export as collection",
+  "person.exporting": "Exporting...",
+  "person.exportSuccess": "Collection created!",
+
+  // Social
+  "social.title": "Social",
+  "social.friendCode": "Your friend code",
+  "social.shareTip": "Share this code so others can add you",
+  "social.addFriend": "Add friend",
+  "social.email": "Email",
+  "social.code": "Code",
+  "social.emailPlaceholder": "email@example.com",
+  "social.codePlaceholder": "Friend code",
+  "social.notFoundEmail": "No user found with that email",
+  "social.notFoundCode": "Friend code not found",
+  "social.searchError": "Search error",
+  "social.add": "Add",
+  "social.requests": "Requests",
+  "social.friends": "Friends",
+  "social.sent": "Sent",
+  "social.pendingAccept": "Pending acceptance",
+  "social.noFriends": "No friends yet",
+  "social.noFriendsDesc": "Search by email or share your friend code.",
+  "social.removeFriend": "Remove this friend?",
+  "social.watched": "Watched",
+  "social.average": "Average",
+  "social.topMovies": "Top Movies",
+  "social.collectionInvites": "Collection invitations",
+  "social.accept": "Accept",
+  "social.decline": "Decline",
+  "social.invitedBy": "Invited by {name}",
+
+  // Movie — add to collection
+  "movie.addToCollection": "Add to collection",
+  "movie.selectCollection": "Select collection",
+  "movie.noCollections": "You don't have collections yet",
+  "movie.added": "Added",
+
+  // Collection Detail
+  "collectionDetail.back": "Collections",
+  "collectionDetail.empty": "Empty collection",
+  "collectionDetail.emptyDesc": "Search for movies and add them from the movie detail page.",
+  "collectionDetail.members": "Members",
+  "collectionDetail.invite": "Invite friend",
+  "collectionDetail.owner": "Owner",
+  "collectionDetail.member": "Member",
+  "collectionDetail.avgRating": "Average",
+  "collectionDetail.shared": "Shared",
 
   // Rating grades
   "rating.S": "Masterpiece",

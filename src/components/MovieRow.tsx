@@ -8,8 +8,16 @@
 import { type TMDBMovie } from "@/lib/tmdb";
 import MovieCard from "@/components/MovieCard";
 
+interface MovieRowMovie {
+  id: number;
+  title: string;
+  poster_path: string | null;
+  release_date?: string;
+  vote_average?: number;
+}
+
 interface MovieRowProps {
-  movies: TMDBMovie[];
+  movies: MovieRowMovie[];
   size?: "small" | "medium";
 }
 

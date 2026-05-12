@@ -21,10 +21,12 @@ import {
   rateMovie,
   removeUserMovie,
   updateWatchCount,
+  addMovieToCollection,
+  getUserCollectionsForMovie,
 } from "@/lib/actions";
 import { ratingToGrade, getRatingColor, getRatingDef } from "@/lib/ratings";
 import { useTranslation } from "@/lib/i18n/context";
-import type { UserMovie, MovieStatus } from "@/lib/types";
+import type { UserMovie, MovieStatus, Collection } from "@/lib/types";
 import RatingPicker from "@/components/RatingPicker";
 import MovieCard from "@/components/MovieCard";
 import styles from "./movie.module.css";
@@ -110,6 +112,9 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   );
   const [showRating, setShowRating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showCollections, setShowCollections] = useState(false);
+  const [collections, setCollections] = useState<(Collection & { hasMovie: boolean })[]>([]);
+  const [loadingCollections, setLoadingCollections] = useState(false);
 
   const director = movie.credits?.crew.find((c) => c.job === "Director");
   const cast = movie.credits?.cast.slice(0, 8) || [];
@@ -182,6 +187,29 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   };
 
   const ratingDef = getRatingDef(userMovie?.personal_rating ?? null);
+
+  const handleOpenCollections = async () => {
+    setLoadingCollections(true);
+    setShowCollections(true);
+    try {
+      const data = await getUserCollectionsForMovie(movie.id);
+      setCollections(data);
+    } catch (err) {
+      console.error("Error loading collections:", err);
+    }
+    setLoadingCollections(false);
+  };
+
+  const handleAddToCollection = async (collectionId: string) => {
+    try {
+      await addMovieToCollection(collectionId, movie.id, movie.title, movie.poster_path);
+      setCollections((prev) =>
+        prev.map((c) => c.id === collectionId ? { ...c, hasMovie: true } : c)
+      );
+    } catch (err) {
+      console.error("Error adding to collection:", err);
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -394,7 +422,69 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               <IconTrash /> {t("movie.removeFromList")}
             </button>
           )}
+
+          {/* Add to Collection */}
+          <button
+            onClick={handleOpenCollections}
+            className="btn btn-secondary btn-sm"
+            id="btn-add-to-collection"
+          >
+            <IconPlus /> {t("movie.addToCollection")}
+          </button>
         </motion.div>
+
+        {/* Collection Picker Modal */}
+        <AnimatePresence>
+          {showCollections && (
+            <motion.div
+              className="modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCollections(false)}
+            >
+              <motion.div
+                className="modal-content"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modal-handle" />
+                <h3 style={{ marginBottom: "var(--space-md)" }}>
+                  {t("movie.selectCollection")}
+                </h3>
+                {loadingCollections ? (
+                  <p style={{ textAlign: "center", opacity: 0.6 }}>...</p>
+                ) : collections.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+                    {collections.map((col) => (
+                      <button
+                        key={col.id}
+                        disabled={col.hasMovie}
+                        onClick={() => handleAddToCollection(col.id)}
+                        className={`btn ${col.hasMovie ? "btn-ghost" : "btn-secondary"}`}
+                        style={{ justifyContent: "space-between", width: "100%" }}
+                      >
+                        <span>{col.name}</span>
+                        {col.hasMovie && (
+                          <span style={{ color: "var(--accent-primary)", fontSize: "0.85em" }}>
+                            <IconCheck /> {t("movie.added")}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ textAlign: "center", opacity: 0.6 }}>
+                    {t("movie.noCollections")}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Rating Modal */}
         <AnimatePresence>

@@ -1,11 +1,11 @@
 /* ============================================
  * Person Detail Client Component
- * Bio + filterable filmography grid
+ * Bio + filterable filmography grid + export
  * ============================================ */
 
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -15,6 +15,8 @@ import {
   type TMDBMovie,
   getProfileUrl,
 } from "@/lib/tmdb";
+import { createCollectionWithMovies } from "@/lib/actions";
+import { useTranslation } from "@/lib/i18n/context";
 import MovieCard from "@/components/MovieCard";
 import styles from "./person.module.css";
 
@@ -34,6 +36,14 @@ const IconFilm = () => (
   </svg>
 );
 
+const IconExport = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+);
+
 type FilterType = "all" | "cast" | "directing";
 
 interface Props {
@@ -43,8 +53,11 @@ interface Props {
 
 export default function PersonDetailClient({ person, credits }: Props) {
   const router = useRouter();
+  const { t, locale } = useTranslation();
   const [filter, setFilter] = useState<FilterType>("all");
   const [showFullBio, setShowFullBio] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
 
   // Deduplicate movies by ID and sort by popularity
   const getFilteredMovies = (): (TMDBMovie & { role: string })[] => {
@@ -79,6 +92,26 @@ export default function PersonDetailClient({ person, credits }: Props) {
   const bioPreview = person.biography && person.biography.length > 300
     ? person.biography.slice(0, 300) + "..."
     : person.biography;
+
+  const dateLocale = locale === "en" ? "en-US" : "es-ES";
+
+  const handleExportCollection = async () => {
+    setExporting(true);
+    try {
+      const collectionType = filter === "directing" ? "director" : filter === "cast" ? "actor" : (directorCount > 0 ? "director" : "actor");
+      const moviesToExport = filteredMovies.map((m) => ({
+        tmdb_movie_id: m.id,
+        movie_title: m.title,
+        movie_poster_path: m.poster_path,
+      }));
+      await createCollectionWithMovies(person.name, collectionType, moviesToExport);
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 3000);
+    } catch (error) {
+      console.error("Export error:", error);
+    }
+    setExporting(false);
+  };
 
   return (
     <div className={styles.page}>
@@ -117,7 +150,7 @@ export default function PersonDetailClient({ person, credits }: Props) {
             {person.birthday && (
               <p className={styles.meta}>
                 {person.place_of_birth && `${person.place_of_birth} · `}
-                {new Date(person.birthday).toLocaleDateString("es-ES", {
+                {new Date(person.birthday).toLocaleDateString(dateLocale, {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
@@ -128,12 +161,12 @@ export default function PersonDetailClient({ person, credits }: Props) {
             <div className={styles.stats}>
               {actorCount > 0 && (
                 <span className={`tag ${filter === "cast" ? "active" : ""}`}>
-                  <IconFilm /> {actorCount} como actor
+                  <IconFilm /> {actorCount} {t("person.asActorCount")}
                 </span>
               )}
               {directorCount > 0 && (
                 <span className={`tag ${filter === "directing" ? "active" : ""}`}>
-                  <IconFilm /> {directorCount} como director
+                  <IconFilm /> {directorCount} {t("person.asDirectorCount")}
                 </span>
               )}
             </div>
@@ -143,7 +176,7 @@ export default function PersonDetailClient({ person, credits }: Props) {
         {/* Biography */}
         {person.biography && (
           <section className={styles.section}>
-            <h2 className="section-title">Biografía</h2>
+            <h2 className="section-title">{t("person.biography")}</h2>
             <p className={styles.bio}>
               {showFullBio ? person.biography : bioPreview}
             </p>
@@ -152,7 +185,7 @@ export default function PersonDetailClient({ person, credits }: Props) {
                 onClick={() => setShowFullBio(!showFullBio)}
                 className="btn btn-ghost btn-sm"
               >
-                {showFullBio ? "Ver menos" : "Ver más"}
+                {showFullBio ? t("person.showLess") : t("person.showMore")}
               </button>
             )}
           </section>
@@ -161,20 +194,20 @@ export default function PersonDetailClient({ person, credits }: Props) {
         {/* Filter tabs */}
         <section className={styles.section}>
           <div className={styles.filterRow}>
-            <h2 className="section-title">Filmografía</h2>
+            <h2 className="section-title">{t("person.filmography")}</h2>
             <div className={styles.filters}>
               <button
                 onClick={() => setFilter("all")}
                 className={`tag ${filter === "all" ? "active" : ""}`}
               >
-                Todas ({actorCount + directorCount})
+                {t("person.all")} ({actorCount + directorCount})
               </button>
               {actorCount > 0 && (
                 <button
                   onClick={() => setFilter("cast")}
                   className={`tag ${filter === "cast" ? "active" : ""}`}
                 >
-                  Actor
+                  {t("person.asActor")}
                 </button>
               )}
               {directorCount > 0 && (
@@ -182,11 +215,25 @@ export default function PersonDetailClient({ person, credits }: Props) {
                   onClick={() => setFilter("directing")}
                   className={`tag ${filter === "directing" ? "active" : ""}`}
                 >
-                  Director
+                  {t("person.asDirector")}
                 </button>
               )}
             </div>
           </div>
+
+          {/* Export button */}
+          {filteredMovies.length > 0 && (
+            <button
+              onClick={handleExportCollection}
+              disabled={exporting}
+              className="btn btn-secondary btn-sm"
+              style={{ marginBottom: "var(--space-md)" }}
+              id="export-collection-btn"
+            >
+              <IconExport />
+              {exporting ? t("person.exporting") : exportSuccess ? t("person.exportSuccess") : t("person.exportCollection")}
+            </button>
+          )}
 
           {/* Movies Grid */}
           {filteredMovies.length > 0 ? (
@@ -205,7 +252,7 @@ export default function PersonDetailClient({ person, credits }: Props) {
             </div>
           ) : (
             <div className="empty-state">
-              <h3>Sin películas para este filtro</h3>
+              <h3>{t("person.noMovies")}</h3>
             </div>
           )}
         </section>

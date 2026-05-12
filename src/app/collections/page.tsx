@@ -3,6 +3,7 @@
  * ============================================ */
 
 import { getUserCollections } from "@/lib/actions";
+import { getPendingInvitations } from "@/lib/collection-actions";
 import CollectionsClient from "./CollectionsClient";
 import type { Metadata } from "next";
 
@@ -12,7 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default async function CollectionsPage() {
-  const collections = await getUserCollections().catch(() => []);
+  const [collections, invitations] = await Promise.all([
+    getUserCollections().catch(() => []),
+    getPendingInvitations().catch(() => [])
+  ]);
 
-  return <CollectionsClient initialCollections={collections} />;
+  return <CollectionsClient initialCollections={collections} initialInvitations={invitations} />;
 }

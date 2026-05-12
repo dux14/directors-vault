@@ -15,6 +15,17 @@ import type {
   CollectionMovie,
 } from "@/lib/types";
 
+// ---- Auth ----
+
+/** Get the current authenticated user */
+export async function getCurrentUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
+
 // ---- User Movies ----
 
 /** Get all movies for the current user with optional status filter */
@@ -219,10 +230,14 @@ export async function getUserCollections(): Promise<Collection[]> {
   } = await supabase.auth.getUser();
   if (!user) return [];
 
+  // Get collections where user is owner OR member
+  // Using the RLS policy "Users can view own or shared collections"
+  // But we need to explicitly query it if we want both. Since RLS handles visibility,
+  // we can just select all collections we have access to?
+  // Wait, if we just do `.from("collections").select("*")`, RLS will filter it to only those we own or are members of!
   const { data, error } = await supabase
     .from("collections")
     .select("*")
-    .eq("user_id", user.id)
     .order("updated_at", { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -373,6 +388,80 @@ export async function removeMovieFromCollection(
 
   if (error) throw new Error(error.message);
   revalidatePath(`/collections/${collectionId}`);
+}
+
+/** Get user collections with info about whether a specific movie is already in them */
+export async function getUserCollectionsForMovie(tmdbMovieId: number): Promise<
+  (Collection & { hasMovie: boolean })[]
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const [collectionsRes, moviesRes] = await Promise.all([
+    supabase
+      .from("collections")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("collection_movies")
+      .select("collection_id")
+      .eq("tmdb_movie_id", tmdbMovieId),
+  ]);
+
+  const collections = (collectionsRes.data || []) as Collection[];
+  const movieCollectionIds = new Set(
+    (moviesRes.data || []).map((m: { collection_id: string }) => m.collection_id)
+  );
+
+  return collections.map((c) => ({
+    ...c,
+    hasMovie: movieCollectionIds.has(c.id),
+  }));
+}
+
+/** Create a collection with multiple movies in one go (filmography export) */
+export async function createCollectionWithMovies(
+  name: string,
+  type: CollectionType,
+  movies: { tmdb_movie_id: number; movie_title: string; movie_poster_path: string | null }[]
+): Promise<Collection> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  // Create collection
+  const { data: collection, error: collError } = await supabase
+    .from("collections")
+    .insert({ name, type, user_id: user.id })
+    .select()
+    .single();
+
+  if (collError) throw new Error(collError.message);
+
+  // Insert all movies
+  if (movies.length > 0) {
+    const movieRows = movies.map((m, i) => ({
+      collection_id: collection.id,
+      tmdb_movie_id: m.tmdb_movie_id,
+      movie_title: m.movie_title,
+      movie_poster_path: m.movie_poster_path,
+      sort_order: i,
+    }));
+
+    const { error: moviesError } = await supabase
+      .from("collection_movies")
+      .upsert(movieRows, { onConflict: "collection_id,tmdb_movie_id" });
+
+    if (moviesError) throw new Error(moviesError.message);
+  }
+
+  revalidatePath("/collections");
+  return collection as Collection;
 }
 
 // ---- Auth Helpers ----

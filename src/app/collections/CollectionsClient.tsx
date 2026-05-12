@@ -9,8 +9,25 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createCollection, deleteCollection } from "@/lib/actions";
+import { respondToInvitation } from "@/lib/collection-actions";
+import type { CollectionInvitation } from "@/lib/collection-actions";
+import { useTranslation } from "@/lib/i18n/context";
 import type { Collection, CollectionType } from "@/lib/types";
 import styles from "./collections.module.css";
+
+/* ---- SVG Icons ---- */
+const IconCheck = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const IconX = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
 
 /* ---- SVG Icons ---- */
 const IconFolder = ({ size = 20 }: { size?: number }) => (
@@ -60,22 +77,25 @@ const IconPlus = () => (
   </svg>
 );
 
-const COLLECTION_TYPES: { value: CollectionType; label: string; icon: React.ReactNode }[] = [
-  { value: "custom", label: "Personalizada", icon: <IconFolder size={16} /> },
-  { value: "saga", label: "Saga", icon: <IconFilm size={16} /> },
-  { value: "director", label: "Director", icon: <IconCamera size={16} /> },
-  { value: "actor", label: "Actor", icon: <IconUser size={16} /> },
-  { value: "genre", label: "Género", icon: <IconTag size={16} /> },
+const COLLECTION_TYPE_ICONS: { value: CollectionType; icon: React.ReactNode }[] = [
+  { value: "custom", icon: <IconFolder size={16} /> },
+  { value: "saga", icon: <IconFilm size={16} /> },
+  { value: "director", icon: <IconCamera size={16} /> },
+  { value: "actor", icon: <IconUser size={16} /> },
+  { value: "genre", icon: <IconTag size={16} /> },
 ];
 
 interface Props {
   initialCollections: Collection[];
+  initialInvitations?: CollectionInvitation[];
 }
 
-export default function CollectionsClient({ initialCollections }: Props) {
+export default function CollectionsClient({ initialCollections, initialInvitations = [] }: Props) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const [collections, setCollections] = useState(initialCollections);
+  const [invitations, setInvitations] = useState(initialInvitations);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<CollectionType>("custom");
@@ -104,7 +124,7 @@ export default function CollectionsClient({ initialCollections }: Props) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Eliminar esta colección?")) return;
+    if (!confirm(t("collections.deleteConfirm"))) return;
     try {
       await deleteCollection(id);
       setCollections((prev) => prev.filter((c) => c.id !== id));
@@ -113,9 +133,25 @@ export default function CollectionsClient({ initialCollections }: Props) {
     }
   };
 
+  const handleRespond = async (invitationId: string, action: "accepted" | "declined") => {
+    try {
+      const res = await respondToInvitation(invitationId, action);
+      if (res.success) {
+        setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+        if (action === "accepted") {
+          // A full refresh or revalidation will happen via revalidatePath in the action,
+          // but we can also trigger a client-side refresh to show the new collection.
+          router.refresh();
+        }
+      }
+    } catch (error) {
+      console.error("Error responding to invitation:", error);
+    }
+  };
+
   const getTypeIcon = (type: string) => {
     return (
-      COLLECTION_TYPES.find((t) => t.value === type)?.icon || <IconFolder size={24} />
+      COLLECTION_TYPE_ICONS.find((t) => t.value === type)?.icon || <IconFolder size={24} />
     );
   };
 
@@ -123,8 +159,8 @@ export default function CollectionsClient({ initialCollections }: Props) {
     <div className="page">
       <div className="container">
         <div className="page-header">
-          <h1><IconFolder size={28} /> Colecciones</h1>
-          <p>Organiza tus películas por tema</p>
+          <h1><IconFolder size={28} /> {t("collections.title")}</h1>
+          <p>{t("collections.subtitle")}</p>
         </div>
 
         {/* Create button */}
@@ -133,8 +169,46 @@ export default function CollectionsClient({ initialCollections }: Props) {
           className={`btn btn-primary ${styles.createBtn}`}
           id="create-collection-btn"
         >
-          <IconPlus /> Nueva Colección
+          <IconPlus /> {t("collections.new")}
         </button>
+
+        {/* Invitations Section */}
+        {invitations.length > 0 && (
+          <section className={styles.invitationsSection}>
+            <h2 className="section-title"><IconUser /> {t("social.collectionInvites")}</h2>
+            <div className={styles.invitesList}>
+              {invitations.map((inv) => (
+                <div key={inv.id} className={styles.inviteCard}>
+                  <div className={styles.inviteInfo}>
+                    <strong>{inv.collection?.name || "Colección"}</strong>
+                    <span>
+                      {t("social.invitedBy").replace(
+                        "{name}",
+                        inv.inviter?.display_name || inv.inviter?.email || "Usuario"
+                      )}
+                    </span>
+                  </div>
+                  <div className={styles.inviteActions}>
+                    <button
+                      onClick={() => handleRespond(inv.id, "declined")}
+                      className="btn btn-ghost btn-icon"
+                      title={t("social.decline")}
+                    >
+                      <IconX />
+                    </button>
+                    <button
+                      onClick={() => handleRespond(inv.id, "accepted")}
+                      className="btn btn-primary btn-icon"
+                      title={t("social.accept")}
+                    >
+                      <IconCheck />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Create Modal */}
         <AnimatePresence>
@@ -156,12 +230,12 @@ export default function CollectionsClient({ initialCollections }: Props) {
               >
                 <div className="modal-handle" />
                 <h3 style={{ marginBottom: "var(--space-lg)" }}>
-                  Nueva Colección
+                  {t("collections.new")}
                 </h3>
                 <form onSubmit={handleCreate} className={styles.createForm}>
                   <input
                     type="text"
-                    placeholder="Nombre de la colección"
+                    placeholder={t("collections.namePlaceholder")}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     className="input"
@@ -170,7 +244,7 @@ export default function CollectionsClient({ initialCollections }: Props) {
                     id="collection-name-input"
                   />
                   <textarea
-                    placeholder="Descripción (opcional)"
+                    placeholder={t("collections.descPlaceholder")}
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
                     className={`input ${styles.textarea}`}
@@ -178,16 +252,16 @@ export default function CollectionsClient({ initialCollections }: Props) {
                     id="collection-description-input"
                   />
                   <div className={styles.typeSelector}>
-                    {COLLECTION_TYPES.map((type) => (
+                    {COLLECTION_TYPE_ICONS.map((ctype) => (
                       <button
-                        key={type.value}
+                        key={ctype.value}
                         type="button"
-                        onClick={() => setNewType(type.value)}
+                        onClick={() => setNewType(ctype.value)}
                         className={`tag ${
-                          newType === type.value ? "active" : ""
+                          newType === ctype.value ? "active" : ""
                         }`}
                       >
-                        {type.icon} {type.label}
+                        {ctype.icon} {t(`collections.type.${ctype.value}`)}
                       </button>
                     ))}
                   </div>
@@ -197,7 +271,7 @@ export default function CollectionsClient({ initialCollections }: Props) {
                       onClick={() => setShowCreate(false)}
                       className="btn btn-ghost"
                     >
-                      Cancelar
+                      {t("general.cancel")}
                     </button>
                     <button
                       type="submit"
@@ -205,7 +279,7 @@ export default function CollectionsClient({ initialCollections }: Props) {
                       className="btn btn-primary"
                       id="save-collection-btn"
                     >
-                      {saving ? "Creando..." : "Crear"}
+                      {saving ? t("collections.creating") : t("collections.create")}
                     </button>
                   </div>
                 </form>
@@ -239,10 +313,7 @@ export default function CollectionsClient({ initialCollections }: Props) {
                     </p>
                   )}
                   <span className={`tag ${styles.collectionType}`}>
-                    {
-                      COLLECTION_TYPES.find((t) => t.value === collection.type)
-                        ?.label
-                    }
+                    {t(`collections.type.${collection.type}`)}
                   </span>
                 </Link>
               </motion.div>
@@ -251,11 +322,8 @@ export default function CollectionsClient({ initialCollections }: Props) {
         ) : (
           <div className="empty-state">
             <div className="icon"><IconFolder size={48} /></div>
-            <h3>Sin colecciones</h3>
-            <p>
-              Crea colecciones para organizar películas por director, saga,
-              género o lo que quieras.
-            </p>
+            <h3>{t("collections.emptyTitle")}</h3>
+            <p>{t("collections.emptyDesc")}</p>
           </div>
         )}
       </div>

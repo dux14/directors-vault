@@ -131,12 +131,12 @@ export default function SocialClient({
       } else {
         setSearchError(
           searchMode === "email"
-            ? "No se encontró usuario con ese correo"
-            : "Código de amigo no encontrado"
+            ? t("social.notFoundEmail")
+            : t("social.notFoundCode")
         );
       }
     } catch {
-      setSearchError("Error al buscar");
+      setSearchError(t("social.searchError"));
     } finally {
       setSearching(false);
     }
@@ -163,7 +163,7 @@ export default function SocialClient({
   };
 
   const handleRemove = async (friendshipId: string) => {
-    if (!confirm("¿Eliminar esta amistad?")) return;
+    if (!confirm(t("social.removeFriend"))) return;
     startTransition(async () => {
       await removeFriend(friendshipId);
       router.refresh();
@@ -174,13 +174,13 @@ export default function SocialClient({
     <div className="page">
       <div className="container">
         <div className="page-header">
-          <h1><IconUsers /> Social</h1>
+          <h1><IconUsers /> {t("social.title")}</h1>
         </div>
 
         {/* Friend Code Card */}
         <div className={styles.friendCodeCard}>
           <div className={styles.codeSection}>
-            <p className={styles.codeLabel}>Tu código de amigo</p>
+            <p className={styles.codeLabel}>{t("social.friendCode")}</p>
             <div className={styles.codeDisplay}>
               <span className={styles.code}>{friendCode}</span>
               <button
@@ -191,33 +191,33 @@ export default function SocialClient({
                 {copied ? <IconCheck /> : <IconCopy />}
               </button>
             </div>
-            <p className={styles.codeHint}>Comparte este código para que te agreguen</p>
+            <p className={styles.codeHint}>{t("social.shareTip")}</p>
           </div>
         </div>
 
         {/* Search for Friends */}
         <section className={styles.section}>
-          <h2 className="section-title"><IconUserPlus /> Agregar amigo</h2>
+          <h2 className="section-title"><IconUserPlus /> {t("social.addFriend")}</h2>
 
           <div className={styles.searchTabs}>
             <button
               onClick={() => setSearchMode("email")}
               className={`tag ${searchMode === "email" ? "active" : ""}`}
             >
-              Email
+              {t("social.email")}
             </button>
             <button
               onClick={() => setSearchMode("code")}
               className={`tag ${searchMode === "code" ? "active" : ""}`}
             >
-              Código
+              {t("social.code")}
             </button>
           </div>
 
           <div className={styles.searchRow}>
             <input
               type={searchMode === "email" ? "email" : "text"}
-              placeholder={searchMode === "email" ? "correo@ejemplo.com" : "Código de amigo"}
+              placeholder={searchMode === "email" ? t("social.emailPlaceholder") : t("social.codePlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -267,7 +267,7 @@ export default function SocialClient({
                   disabled={isPending}
                   className="btn btn-primary btn-sm"
                 >
-                  <IconUserPlus /> Agregar
+                  <IconUserPlus /> {t("social.add")}
                 </button>
               </motion.div>
             )}
@@ -278,7 +278,7 @@ export default function SocialClient({
         {pendingReceived.length > 0 && (
           <section className={styles.section}>
             <h2 className="section-title">
-              <IconClock /> Solicitudes ({pendingReceived.length})
+              <IconClock /> {t("social.requests")} ({pendingReceived.length})
             </h2>
             <div className={styles.friendList}>
               {pendingReceived.map((f) => (
@@ -323,7 +323,7 @@ export default function SocialClient({
         {/* Friends List */}
         <section className={styles.section}>
           <h2 className="section-title">
-            <IconUsers /> Amigos ({friends.length})
+            <IconUsers /> {t("social.friends")} ({friends.length})
           </h2>
           {friends.length > 0 ? (
             <div className={styles.friendList}>
@@ -358,8 +358,8 @@ export default function SocialClient({
           ) : (
             <div className="empty-state">
               <div className="icon"><IconUsers /></div>
-              <h3>Aún no tienes amigos</h3>
-              <p>Busca por correo electrónico o comparte tu código de amigo.</p>
+              <h3>{t("social.noFriends")}</h3>
+              <p>{t("social.noFriendsDesc")}</p>
             </div>
           )}
         </section>
@@ -367,7 +367,7 @@ export default function SocialClient({
         {/* Pending Sent */}
         {pendingSent.length > 0 && (
           <section className={styles.section}>
-            <h2 className="section-title">Enviadas ({pendingSent.length})</h2>
+            <h2 className="section-title">{t("social.sent")} ({pendingSent.length})</h2>
             <div className={styles.friendList}>
               {pendingSent.map((f) => (
                 <div key={f.id} className={`${styles.friendCard} ${styles.pending}`}>
@@ -378,7 +378,7 @@ export default function SocialClient({
                   </div>
                   <div className={styles.friendInfo}>
                     <h3>{f.profile?.display_name || f.profile?.email}</h3>
-                    <p className={styles.friendEmail}>Pendiente de aceptar</p>
+                    <p className={styles.friendEmail}>{t("social.pendingAccept")}</p>
                   </div>
                   <button
                     onClick={() => handleRemove(f.id)}

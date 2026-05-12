@@ -6,3 +6,25 @@
   margin-top: var(--space-md);
   margin-bottom: var(--space-sm);
 }
+
+.ratingOverlay {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--surface-elevated);
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.memberRating {
+  opacity: 0.9;
+}
+
+.avgRating {
+  font-weight: 700;
+  margin-left: auto;
+  opacity: 1;
+}

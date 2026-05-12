@@ -81,6 +81,15 @@ const es = {
   "collections.type.actor": "Actor",
   "collections.type.genre": "Género",
 
+  // Collection Detail (shared)
+  "collectionDetail.back": "Colecciones",
+  "collectionDetail.shared": "Compartida",
+  "collectionDetail.members": "Miembros",
+  "collectionDetail.owner": "dueño",
+  "collectionDetail.invite": "Invitar Amigo",
+  "collectionDetail.empty": "Colección vacía",
+  "collectionDetail.emptyDesc": "Busca películas y agrégalas a esta colección desde su página de detalle.",
+
   // Profile
   "profile.title": "Mi Perfil",
   "profile.watched": "Vistas",
@@ -101,6 +110,54 @@ const es = {
   "person.showMore": "Ver más",
   "person.showLess": "Ver menos",
   "person.noMovies": "Sin películas para este filtro",
+  "person.exportCollection": "Exportar como colección",
+  "person.exporting": "Exportando...",
+  "person.exportSuccess": "¡Colección creada!",
+
+  // Social
+  "social.title": "Social",
+  "social.friendCode": "Tu código de amigo",
+  "social.shareTip": "Comparte este código para que te agreguen",
+  "social.addFriend": "Agregar amigo",
+  "social.email": "Email",
+  "social.code": "Código",
+  "social.emailPlaceholder": "correo@ejemplo.com",
+  "social.codePlaceholder": "Código de amigo",
+  "social.notFoundEmail": "No se encontró usuario con ese correo",
+  "social.notFoundCode": "Código de amigo no encontrado",
+  "social.searchError": "Error al buscar",
+  "social.add": "Agregar",
+  "social.requests": "Solicitudes",
+  "social.friends": "Amigos",
+  "social.sent": "Enviadas",
+  "social.pendingAccept": "Pendiente de aceptar",
+  "social.noFriends": "Aún no tienes amigos",
+  "social.noFriendsDesc": "Busca por correo electrónico o comparte tu código de amigo.",
+  "social.removeFriend": "¿Eliminar esta amistad?",
+  "social.watched": "Vistas",
+  "social.average": "Promedio",
+  "social.topMovies": "Top Películas",
+  "social.collectionInvites": "Invitaciones a colecciones",
+  "social.accept": "Aceptar",
+  "social.decline": "Rechazar",
+  "social.invitedBy": "Invitado por {name}",
+
+  // Movie — add to collection
+  "movie.addToCollection": "Agregar a colección",
+  "movie.selectCollection": "Seleccionar colección",
+  "movie.noCollections": "No tienes colecciones aún",
+  "movie.added": "Agregada",
+
+  // Collection Detail
+  "collectionDetail.back": "Colecciones",
+  "collectionDetail.empty": "Colección vacía",
+  "collectionDetail.emptyDesc": "Busca películas y agrégalas a esta colección desde su página de detalle.",
+  "collectionDetail.members": "Miembros",
+  "collectionDetail.invite": "Invitar amigo",
+  "collectionDetail.owner": "Dueño",
+  "collectionDetail.member": "Miembro",
+  "collectionDetail.avgRating": "Promedio",
+  "collectionDetail.shared": "Compartida",
 
   // Rating grades
   "rating.S": "Obra maestra",

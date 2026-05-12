@@ -7,6 +7,7 @@
 
 import { useRouter } from "next/navigation";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
+import { useTranslation } from "@/lib/i18n/context";
 import MovieCard from "@/components/MovieCard";
 import type { UserPublicProfile } from "@/lib/types";
 import styles from "./friendProfile.module.css";
@@ -61,6 +62,7 @@ interface Props {
 
 export default function FriendProfileClient({ profile, stats }: Props) {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const avgGrade = stats.avgRating > 0
     ? ratingToGrade(Math.round(stats.avgRating))
@@ -99,21 +101,21 @@ export default function FriendProfileClient({ profile, stats }: Props) {
           <div className={styles.statCard}>
             <IconEye />
             <span className={styles.statValue}>{stats.watched}</span>
-            <span className={styles.statLabel}>Vistas</span>
+            <span className={styles.statLabel}>{t("social.watched")}</span>
           </div>
           <div className={styles.statCard}>
             <IconStar />
             <span className={styles.statValue} style={{ color: avgColor }}>
               {avgGrade || "—"}
             </span>
-            <span className={styles.statLabel}>Promedio</span>
+            <span className={styles.statLabel}>{t("social.average")}</span>
           </div>
         </div>
 
         {/* Top Movies */}
         {stats.topMovieDetails.length > 0 && (
           <section className={styles.section}>
-            <h2 className="section-title"><IconTrophy /> Top Películas</h2>
+            <h2 className="section-title"><IconTrophy /> {t("social.topMovies")}</h2>
             <div className="movie-grid">
               {stats.topMovieDetails.map((movie) => (
                 <MovieCard
