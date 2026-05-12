@@ -81,14 +81,7 @@ const en: Record<string, string> = {
   "collections.type.actor": "Actor",
   "collections.type.genre": "Genre",
 
-  // Collection Detail (shared)
-  "collectionDetail.back": "Collections",
-  "collectionDetail.shared": "Shared",
-  "collectionDetail.members": "Members",
-  "collectionDetail.owner": "owner",
-  "collectionDetail.invite": "Invite Friend",
-  "collectionDetail.empty": "Empty collection",
-  "collectionDetail.emptyDesc": "Search for movies and add them to this collection from their detail page.",
+
 
   // Profile
   "profile.title": "My Profile",

@@ -466,15 +466,6 @@ export async function createCollectionWithMovies(
 
 // ---- Auth Helpers ----
 
-/** Get current user profile */
-export async function getCurrentUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
-
 /** Sign out */
 export async function signOut() {
   const supabase = await createClient();

@@ -81,14 +81,7 @@ const es = {
   "collections.type.actor": "Actor",
   "collections.type.genre": "Género",
 
-  // Collection Detail (shared)
-  "collectionDetail.back": "Colecciones",
-  "collectionDetail.shared": "Compartida",
-  "collectionDetail.members": "Miembros",
-  "collectionDetail.owner": "dueño",
-  "collectionDetail.invite": "Invitar Amigo",
-  "collectionDetail.empty": "Colección vacía",
-  "collectionDetail.emptyDesc": "Busca películas y agrégalas a esta colección desde su página de detalle.",
+
 
   // Profile
   "profile.title": "Mi Perfil",
