@@ -139,10 +139,10 @@ export default function CollectionsClient({ initialCollections, initialInvitatio
       if (res.success) {
         setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
         if (action === "accepted") {
-          // A full refresh or revalidation will happen via revalidatePath in the action,
-          // but we can also trigger a client-side refresh to show the new collection.
           router.refresh();
         }
+      } else {
+        console.error("Failed to respond to invitation:", res.error);
       }
     } catch (error) {
       console.error("Error responding to invitation:", error);

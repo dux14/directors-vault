@@ -93,32 +93,33 @@ export async function inviteToCollection(
 export async function respondToInvitation(
   invitationId: string,
   action: "accepted" | "declined"
-): Promise<{ success: boolean }> {
+): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { success: false };
+  if (!user) return { success: false, error: "Not authenticated" };
 
-  // Get the invitation
-  const { data: invitation } = await supabase
+  const { data: invitation, error: lookupErr } = await supabase
     .from("collection_invitations")
     .select("*")
     .eq("id", invitationId)
     .eq("invitee_id", user.id)
     .single();
 
-  if (!invitation) return { success: false };
+  if (lookupErr || !invitation) {
+    return { success: false, error: lookupErr?.message ?? "Invitation not found" };
+  }
 
-  // Update status
-  await supabase
+  const { error: updateErr } = await supabase
     .from("collection_invitations")
     .update({ status: action })
     .eq("id", invitationId);
 
-  // If accepted, add as member
+  if (updateErr) return { success: false, error: updateErr.message };
+
   if (action === "accepted") {
-    await supabase.from("collection_members").upsert(
+    const { error: memberErr } = await supabase.from("collection_members").upsert(
       {
         collection_id: invitation.collection_id,
         user_id: user.id,
@@ -126,6 +127,8 @@ export async function respondToInvitation(
       },
       { onConflict: "collection_id,user_id" }
     );
+
+    if (memberErr) return { success: false, error: memberErr.message };
   }
 
   revalidatePath("/social");
