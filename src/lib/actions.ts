@@ -257,6 +257,11 @@ export async function createCollection(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  // TEMP DIAGNOSTIC — confirm whether PostgREST sees auth.uid() === user.id
+  const { data: uidProbe, error: probeErr } = await supabase.rpc("get_my_uid");
+  console.error("[probe createCollection] uid =", uidProbe, "err =", probeErr?.message);
+  console.error("[probe createCollection] expected =", user.id);
+
   const { data, error } = await supabase
     .from("collections")
     .insert({
@@ -433,6 +438,11 @@ export async function createCollectionWithMovies(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+
+  // TEMP DIAGNOSTIC — confirm whether PostgREST sees auth.uid() === user.id
+  const { data: uidProbe, error: probeErr } = await supabase.rpc("get_my_uid");
+  console.error("[probe createCollectionWithMovies] uid =", uidProbe, "err =", probeErr?.message);
+  console.error("[probe createCollectionWithMovies] expected =", user.id);
 
   // Create collection
   const { data: collection, error: collError } = await supabase
