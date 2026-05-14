@@ -167,8 +167,11 @@ export async function createClient() {
               : authHeader === "MISSING"
                 ? "MISSING"
                 : "OTHER";
+        const bodyPreview =
+          init?.body && typeof init.body === "string" ? init.body.slice(0, 300) : "";
         console.error(
-          `[supabase/server] outgoing rest ${init?.method ?? "GET"} ${url} auth=${tag} prefix=${authHeader.slice(0, 24)}`
+          `[supabase/server] outgoing rest ${init?.method ?? "GET"} ${url} auth=${tag} prefix=${authHeader.slice(0, 24)}` +
+            (bodyPreview ? ` body=${bodyPreview}` : "")
         );
         const response = await origFetch(input, init);
         if (response.status >= 400) {
