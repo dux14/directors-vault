@@ -103,5 +103,22 @@ export async function createClient() {
       async () => accessToken;
   }
 
+  // TEMP DIAGNOSTIC — wrap rest.fetch to log outgoing Authorization header.
+  if (process.env.NODE_ENV === "production" && accessToken) {
+    const rest = (client as unknown as { rest: { fetch: typeof fetch } }).rest;
+    const origFetch = rest.fetch;
+    rest.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      const headers = new Headers(init?.headers);
+      const authHeader = headers.get("Authorization") || "MISSING";
+      const authPrefix = authHeader.slice(0, 20);
+      const authMatchesExpected = authHeader === `Bearer ${accessToken}`;
+      console.error(
+        `[supabase/server] outgoing rest: url=${url} authPrefix=${authPrefix} matchesExpected=${authMatchesExpected}`
+      );
+      return origFetch(input, init);
+    }) as typeof fetch;
+  }
+
   return client;
 }
