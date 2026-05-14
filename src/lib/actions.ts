@@ -277,7 +277,7 @@ export async function createCollection(
 /** Update a collection */
 export async function updateCollection(
   collectionId: string,
-  updates: { name?: string; description?: string; cover_image_url?: string }
+  updates: { name?: string; description?: string; cover_image_url?: string; type?: CollectionType }
 ): Promise<Collection> {
   const supabase = await createClient();
   const {

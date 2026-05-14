@@ -5,6 +5,7 @@
 "use client";
 
 import { useTranslation, type Locale } from "@/lib/i18n/context";
+import { useRouter } from "next/navigation";
 import styles from "./LanguageSwitcher.module.css";
 
 interface Props {
@@ -13,23 +14,26 @@ interface Props {
 
 export default function LanguageSwitcher({ variant = "compact" }: Props) {
   const { locale, setLocale } = useTranslation();
+  const router = useRouter();
 
-  const toggleLocale = () => {
-    setLocale(locale === "es" ? "en" : "es");
+  const changeLocale = (newLocale: Locale) => {
+    setLocale(newLocale);
+    // Refresh server components so TMDB fetches run with the new locale cookie
+    router.refresh();
   };
 
   if (variant === "full") {
     return (
       <div className={styles.fullWrapper}>
         <button
-          onClick={() => setLocale("es")}
+          onClick={() => changeLocale("es")}
           className={`${styles.langBtn} ${locale === "es" ? styles.active : ""}`}
           id="lang-es"
         >
           ES
         </button>
         <button
-          onClick={() => setLocale("en")}
+          onClick={() => changeLocale("en")}
           className={`${styles.langBtn} ${locale === "en" ? styles.active : ""}`}
           id="lang-en"
         >
@@ -41,7 +45,7 @@ export default function LanguageSwitcher({ variant = "compact" }: Props) {
 
   return (
     <button
-      onClick={toggleLocale}
+      onClick={() => changeLocale(locale === "es" ? "en" : "es")}
       className={styles.toggle}
       id="language-toggle"
       title={locale === "es" ? "Switch to English" : "Cambiar a Español"}

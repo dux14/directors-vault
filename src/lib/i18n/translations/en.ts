@@ -151,6 +151,11 @@ const en: Record<string, string> = {
   "collectionDetail.member": "Member",
   "collectionDetail.avgRating": "Average",
   "collectionDetail.shared": "Shared",
+  "collectionDetail.edit": "Edit",
+  "collectionDetail.editTitle": "Edit collection",
+  "collectionDetail.saving": "Saving...",
+  "collectionDetail.deleting": "Deleting...",
+  "collectionDetail.deleteConfirm": "Delete this collection? This action cannot be undone.",
 
   // Rating grades
   "rating.S": "Masterpiece",

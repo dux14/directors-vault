@@ -151,6 +151,11 @@ const es = {
   "collectionDetail.member": "Miembro",
   "collectionDetail.avgRating": "Promedio",
   "collectionDetail.shared": "Compartida",
+  "collectionDetail.edit": "Editar",
+  "collectionDetail.editTitle": "Editar colección",
+  "collectionDetail.saving": "Guardando...",
+  "collectionDetail.deleting": "Eliminando...",
+  "collectionDetail.deleteConfirm": "¿Eliminar esta colección? Esta acción no se puede deshacer.",
 
   // Rating grades
   "rating.S": "Obra maestra",
