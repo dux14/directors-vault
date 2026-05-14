@@ -34,7 +34,7 @@ npx supabase link --project-ref vfywbuhnxtatqppzhjtx
 | Client Components (`"use client"`) | `src/lib/supabase/client.ts` → `createClient()` (sync) |
 | Auth middleware | `src/lib/supabase/middleware.ts` → `updateSession()` |
 
-**JWT pinning in `server.ts`** — `createClient()` extracts the `access_token` directly from the `sb-<ref>-auth-token` cookie and pins it as `global.headers.Authorization`. This works around a `@supabase/supabase-js` bug where `_getAccessToken()` falls back to the anon key (so `auth.uid() = NULL` in PostgREST → 403 RLS rejection) when the auth client's internal `getSession()` returns null after a token refresh. Don't remove the JWT-pinning logic without verifying writes still work in production.
+**JWT pinning in `server.ts`** — `createClient()` extracts the `access_token` directly from the `sb-<ref>-auth-token` cookie and assigns it to `client.accessToken` AFTER `createServerClient` returns. supabase-js's `_getAccessToken()` then returns our token instead of falling back to the anon key when its internal `getSession()` is null. Setting `accessToken` via constructor options would trip supabase-js's "throwing auth Proxy" path and break `supabase.auth.getUser()` — assigning post-construction avoids that. Don't remove the JWT-pinning logic without verifying writes still work in production.
 
 **Auth**: Supabase Auth via `@supabase/ssr`. The middleware (`updateSession`) refreshes tokens on every request and redirects unauthenticated users to `/login`. Public routes: `/login`, `/auth/callback`, `/auth/confirm`.
 
@@ -50,7 +50,7 @@ npx supabase link --project-ref vfywbuhnxtatqppzhjtx
 
 ## Migrations
 
-Never edit committed migrations (`001`–`009`). Create new ones numbered in sequence: `supabase/migrations/NNN_description.sql`. Apply with `npx supabase db push`.
+Never edit committed migrations (`001`–`010`). Create new ones numbered in sequence: `supabase/migrations/NNN_description.sql`. Apply with `npx supabase db push`.
 
 ## Environment Variables
 

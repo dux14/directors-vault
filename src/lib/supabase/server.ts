@@ -63,7 +63,7 @@ export async function createClient() {
   const cookieStore = await cookies();
   const accessToken = extractAccessToken(cookieStore.getAll());
 
-  return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  const client = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -79,10 +79,17 @@ export async function createClient() {
         }
       },
     },
-    ...(accessToken && {
-      global: {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      },
-    }),
   });
+
+  // Pin the user JWT on the client's internal `_getAccessToken()` hook.
+  // Setting `accessToken` AFTER createServerClient avoids supabase-js's "throwing
+  // auth Proxy" path (it only triggers when `accessToken` is passed via options),
+  // so `supabase.auth.getUser()` keeps working while every PostgREST request
+  // carries the real user JWT instead of falling back to the anon key.
+  if (accessToken) {
+    (client as unknown as { accessToken: () => Promise<string | null> }).accessToken =
+      async () => accessToken;
+  }
+
+  return client;
 }
