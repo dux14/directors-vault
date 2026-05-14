@@ -64,35 +64,6 @@ export async function createClient() {
   const allCookies = cookieStore.getAll();
   const accessToken = extractAccessToken(allCookies);
 
-  // TEMP DIAGNOSTIC — remove once 403 RLS bug is confirmed fixed.
-  if (process.env.NODE_ENV === "production") {
-    const sbCookies = allCookies.filter((c) => c.name.startsWith("sb-"));
-    console.error(
-      `[supabase/server] jwt=${accessToken ? `len:${accessToken.length}` : "NULL"}` +
-        ` cookieName=${AUTH_COOKIE_NAME} sbCookies=${JSON.stringify(
-          sbCookies.map((c) => ({ name: c.name, valLen: c.value.length, prefix: c.value.slice(0, 10) }))
-        )}`
-    );
-
-    // Decode JWT claims so we can see what PostgREST is actually getting.
-    if (accessToken) {
-      try {
-        const parts = accessToken.split(".");
-        const headerJson = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf-8"));
-        const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
-        const now = Math.floor(Date.now() / 1000);
-        console.error(
-          `[supabase/server] jwt claims: alg=${headerJson.alg} kid=${headerJson.kid ?? "none"} ` +
-            `sub=${payload.sub} role=${payload.role} aud=${payload.aud} ` +
-            `iss=${payload.iss} exp_in=${payload.exp - now}s ` +
-            `is_anonymous=${payload.is_anonymous} ref=${payload.ref ?? "n/a"}`
-        );
-      } catch (e) {
-        console.error(`[supabase/server] jwt decode failed:`, e);
-      }
-    }
-  }
-
   const client = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
       getAll() {
@@ -124,69 +95,6 @@ export async function createClient() {
     const restHeaders = (client as unknown as { rest: { headers: Headers } }).rest?.headers;
     if (restHeaders && typeof restHeaders.set === "function") {
       restHeaders.set("Authorization", `Bearer ${accessToken}`);
-    }
-
-    // TEMP DIAGNOSTIC — verify both layers stuck, plus log every REST request's
-    // outgoing Authorization to find where the anon-key fallback enters.
-    if (process.env.NODE_ENV === "production") {
-      const l1Fn = (client as unknown as { accessToken?: unknown }).accessToken;
-      const l1OK = typeof l1Fn === "function";
-      const l2Auth = restHeaders?.get?.("Authorization") ?? null;
-      const l2OK = l2Auth === `Bearer ${accessToken}`;
-      console.error(
-        `[supabase/server] pin verify: layer1=${l1OK} layer2=${l2OK} ` +
-          `l2Prefix=${l2Auth ? l2Auth.slice(0, 24) : "MISSING"}`
-      );
-
-      // Resolve accessToken eagerly to verify Layer 1 path works
-      if (l1OK) {
-        try {
-          const resolved = await (l1Fn as () => Promise<string | null>)();
-          console.error(
-            `[supabase/server] layer1 resolve: ${
-              resolved === accessToken ? "MATCH" : resolved ? `MISMATCH(len:${resolved.length})` : "NULL"
-            }`
-          );
-        } catch (e) {
-          console.error(`[supabase/server] layer1 resolve threw:`, e);
-        }
-      }
-
-      const rest = (client as unknown as { rest: { fetch: typeof fetch } }).rest;
-      const origFetch = rest.fetch;
-      rest.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-        const url =
-          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-        const headers = new Headers(init?.headers);
-        const authHeader = headers.get("Authorization") || "MISSING";
-        const tag =
-          authHeader === `Bearer ${accessToken}`
-            ? "USER_JWT"
-            : authHeader === `Bearer ${SUPABASE_ANON_KEY}`
-              ? "ANON_KEY"
-              : authHeader === "MISSING"
-                ? "MISSING"
-                : "OTHER";
-        const bodyPreview =
-          init?.body && typeof init.body === "string" ? init.body.slice(0, 300) : "";
-        console.error(
-          `[supabase/server] outgoing rest ${init?.method ?? "GET"} ${url} auth=${tag} prefix=${authHeader.slice(0, 24)}` +
-            (bodyPreview ? ` body=${bodyPreview}` : "")
-        );
-        const response = await origFetch(input, init);
-        if (response.status >= 400) {
-          try {
-            const clone = response.clone();
-            const body = await clone.text();
-            console.error(
-              `[supabase/server] rest error status=${response.status} body=${body.slice(0, 500)}`
-            );
-          } catch {
-            /* ignore body read errors */
-          }
-        }
-        return response;
-      }) as typeof fetch;
     }
   }
 
