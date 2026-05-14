@@ -61,7 +61,19 @@ function extractAccessToken(allCookies: RawCookie[]): string | null {
 
 export async function createClient() {
   const cookieStore = await cookies();
-  const accessToken = extractAccessToken(cookieStore.getAll());
+  const allCookies = cookieStore.getAll();
+  const accessToken = extractAccessToken(allCookies);
+
+  // TEMP DIAGNOSTIC — remove once 403 RLS bug is confirmed fixed.
+  if (process.env.NODE_ENV === "production") {
+    const sbCookies = allCookies.filter((c) => c.name.startsWith("sb-"));
+    console.error(
+      `[supabase/server] jwt=${accessToken ? `len:${accessToken.length}` : "NULL"}` +
+        ` cookieName=${AUTH_COOKIE_NAME} sbCookies=${JSON.stringify(
+          sbCookies.map((c) => ({ name: c.name, valLen: c.value.length, prefix: c.value.slice(0, 10) }))
+        )}`
+    );
+  }
 
   const client = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
