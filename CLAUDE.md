@@ -34,6 +34,8 @@ npx supabase link --project-ref vfywbuhnxtatqppzhjtx
 | Client Components (`"use client"`) | `src/lib/supabase/client.ts` → `createClient()` (sync) |
 | Auth middleware | `src/lib/supabase/middleware.ts` → `updateSession()` |
 
+**JWT pinning in `server.ts`** — `createClient()` extracts the `access_token` directly from the `sb-<ref>-auth-token` cookie and pins it as `global.headers.Authorization`. This works around a `@supabase/supabase-js` bug where `_getAccessToken()` falls back to the anon key (so `auth.uid() = NULL` in PostgREST → 403 RLS rejection) when the auth client's internal `getSession()` returns null after a token refresh. Don't remove the JWT-pinning logic without verifying writes still work in production.
+
 **Auth**: Supabase Auth via `@supabase/ssr`. The middleware (`updateSession`) refreshes tokens on every request and redirects unauthenticated users to `/login`. Public routes: `/login`, `/auth/callback`, `/auth/confirm`.
 
 **i18n**: Client-side `LanguageProvider` in `src/lib/i18n/context.tsx` stores locale in `localStorage` + `dv-locale` cookie. Use `useTranslation()` in client components for `t()` and `tmdbLocale`. Server components call `getServerTmdbLocale()` to read the same cookie.
