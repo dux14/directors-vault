@@ -73,6 +73,24 @@ export async function createClient() {
           sbCookies.map((c) => ({ name: c.name, valLen: c.value.length, prefix: c.value.slice(0, 10) }))
         )}`
     );
+
+    // Decode JWT claims so we can see what PostgREST is actually getting.
+    if (accessToken) {
+      try {
+        const parts = accessToken.split(".");
+        const headerJson = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf-8"));
+        const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
+        const now = Math.floor(Date.now() / 1000);
+        console.error(
+          `[supabase/server] jwt claims: alg=${headerJson.alg} kid=${headerJson.kid ?? "none"} ` +
+            `sub=${payload.sub} role=${payload.role} aud=${payload.aud} ` +
+            `iss=${payload.iss} exp_in=${payload.exp - now}s ` +
+            `is_anonymous=${payload.is_anonymous} ref=${payload.ref ?? "n/a"}`
+        );
+      } catch (e) {
+        console.error(`[supabase/server] jwt decode failed:`, e);
+      }
+    }
   }
 
   const client = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -152,7 +170,19 @@ export async function createClient() {
         console.error(
           `[supabase/server] outgoing rest ${init?.method ?? "GET"} ${url} auth=${tag} prefix=${authHeader.slice(0, 24)}`
         );
-        return origFetch(input, init);
+        const response = await origFetch(input, init);
+        if (response.status >= 400) {
+          try {
+            const clone = response.clone();
+            const body = await clone.text();
+            console.error(
+              `[supabase/server] rest error status=${response.status} body=${body.slice(0, 500)}`
+            );
+          } catch {
+            /* ignore body read errors */
+          }
+        }
+        return response;
       }) as typeof fetch;
     }
   }
