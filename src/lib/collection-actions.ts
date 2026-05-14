@@ -143,15 +143,35 @@ export async function getPendingInvitations(): Promise<CollectionInvitation[]> {
 
   const { data, error } = await supabase
     .from("collection_invitations")
-    .select(
-      "*, collection:collections(name, type), inviter:profiles!collection_invitations_inviter_id_fkey(display_name, email)"
-    )
+    .select("*, collection:collections(name, type)")
     .eq("invitee_id", user.id)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
-  if (error) return [];
-  return (data || []) as CollectionInvitation[];
+  if (error || !data || data.length === 0) return [];
+
+  // Fetch inviter profiles separately — no FK from collection_invitations.inviter_id
+  // to public.profiles exists (it references auth.users(id)), so PostgREST cannot
+  // resolve a relationship hint here.
+  const inviterIds = Array.from(
+    new Set(data.map((i: { inviter_id: string }) => i.inviter_id))
+  );
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, display_name, email")
+    .in("id", inviterIds);
+
+  const profileMap = new Map(
+    (profiles || []).map((p: { id: string; display_name: string | null; email: string }) => [
+      p.id,
+      { display_name: p.display_name, email: p.email },
+    ])
+  );
+
+  return data.map((i: { inviter_id: string }) => ({
+    ...i,
+    inviter: profileMap.get(i.inviter_id),
+  })) as CollectionInvitation[];
 }
 
 /** Get ratings from all members for movies in a shared collection */
