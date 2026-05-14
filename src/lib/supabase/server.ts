@@ -107,6 +107,54 @@ export async function createClient() {
     if (restHeaders && typeof restHeaders.set === "function") {
       restHeaders.set("Authorization", `Bearer ${accessToken}`);
     }
+
+    // TEMP DIAGNOSTIC — verify both layers stuck, plus log every REST request's
+    // outgoing Authorization to find where the anon-key fallback enters.
+    if (process.env.NODE_ENV === "production") {
+      const l1Fn = (client as unknown as { accessToken?: unknown }).accessToken;
+      const l1OK = typeof l1Fn === "function";
+      const l2Auth = restHeaders?.get?.("Authorization") ?? null;
+      const l2OK = l2Auth === `Bearer ${accessToken}`;
+      console.error(
+        `[supabase/server] pin verify: layer1=${l1OK} layer2=${l2OK} ` +
+          `l2Prefix=${l2Auth ? l2Auth.slice(0, 24) : "MISSING"}`
+      );
+
+      // Resolve accessToken eagerly to verify Layer 1 path works
+      if (l1OK) {
+        try {
+          const resolved = await (l1Fn as () => Promise<string | null>)();
+          console.error(
+            `[supabase/server] layer1 resolve: ${
+              resolved === accessToken ? "MATCH" : resolved ? `MISMATCH(len:${resolved.length})` : "NULL"
+            }`
+          );
+        } catch (e) {
+          console.error(`[supabase/server] layer1 resolve threw:`, e);
+        }
+      }
+
+      const rest = (client as unknown as { rest: { fetch: typeof fetch } }).rest;
+      const origFetch = rest.fetch;
+      rest.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const headers = new Headers(init?.headers);
+        const authHeader = headers.get("Authorization") || "MISSING";
+        const tag =
+          authHeader === `Bearer ${accessToken}`
+            ? "USER_JWT"
+            : authHeader === `Bearer ${SUPABASE_ANON_KEY}`
+              ? "ANON_KEY"
+              : authHeader === "MISSING"
+                ? "MISSING"
+                : "OTHER";
+        console.error(
+          `[supabase/server] outgoing rest ${init?.method ?? "GET"} ${url} auth=${tag} prefix=${authHeader.slice(0, 24)}`
+        );
+        return origFetch(input, init);
+      }) as typeof fetch;
+    }
   }
 
   return client;
