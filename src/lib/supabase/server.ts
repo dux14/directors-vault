@@ -93,31 +93,20 @@ export async function createClient() {
     },
   });
 
-  // Pin the user JWT on the client's internal `_getAccessToken()` hook.
-  // Setting `accessToken` AFTER createServerClient avoids supabase-js's "throwing
-  // auth Proxy" path (it only triggers when `accessToken` is passed via options),
-  // so `supabase.auth.getUser()` keeps working while every PostgREST request
-  // carries the real user JWT instead of falling back to the anon key.
+  // Pin the user JWT. Two layers because supabase-js's `_getAccessToken()` can
+  // fall back to the anon key when its internal session cache is stale:
+  //   1. `client.accessToken` — read by the bound `_getAccessToken()` first.
+  //   2. `client.rest.headers.Authorization` — copied into every PostgrestBuilder
+  //      via `new Headers(this.headers)` on `.from()`, so `fetchWithAuth`'s
+  //      "only set if missing" check preserves our header even if (1) fails
+  //      under minification / binding edge cases.
   if (accessToken) {
     (client as unknown as { accessToken: () => Promise<string | null> }).accessToken =
       async () => accessToken;
-  }
-
-  // TEMP DIAGNOSTIC — wrap rest.fetch to log outgoing Authorization header.
-  if (process.env.NODE_ENV === "production" && accessToken) {
-    const rest = (client as unknown as { rest: { fetch: typeof fetch } }).rest;
-    const origFetch = rest.fetch;
-    rest.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-      const headers = new Headers(init?.headers);
-      const authHeader = headers.get("Authorization") || "MISSING";
-      const authPrefix = authHeader.slice(0, 20);
-      const authMatchesExpected = authHeader === `Bearer ${accessToken}`;
-      console.error(
-        `[supabase/server] outgoing rest: url=${url} authPrefix=${authPrefix} matchesExpected=${authMatchesExpected}`
-      );
-      return origFetch(input, init);
-    }) as typeof fetch;
+    const restHeaders = (client as unknown as { rest: { headers: Headers } }).rest?.headers;
+    if (restHeaders && typeof restHeaders.set === "function") {
+      restHeaders.set("Authorization", `Bearer ${accessToken}`);
+    }
   }
 
   return client;
