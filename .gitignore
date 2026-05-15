@@ -54,3 +54,7 @@ public/workbox-*.js
 public/workbox-*.js.map
 public/swe-worker-*.js
 .idea/
+
+.claude
+CLAUDE.md
+docs/
