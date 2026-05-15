@@ -17,6 +17,7 @@ import {
 import { getFriendships } from "@/lib/social-actions";
 import CollectionDetailClient from "./CollectionDetailClient";
 import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -47,6 +48,19 @@ export default async function CollectionDetailPage({ params }: Props) {
     isOwner ? getFriendships() : Promise.resolve({ friends: [], pendingReceived: [], pendingSent: [] }),
   ]);
 
+  let watchedIds: number[] = [];
+  if (user && movies.length > 0) {
+    const supabase = await createClient();
+    const tmdbIds = movies.map((m) => m.tmdb_movie_id);
+    const { data: watchedRows } = await supabase
+      .from("user_movies")
+      .select("tmdb_movie_id")
+      .eq("user_id", user.id)
+      .eq("status", "watched")
+      .in("tmdb_movie_id", tmdbIds);
+    watchedIds = (watchedRows ?? []).map((r) => r.tmdb_movie_id);
+  }
+
   return (
     <CollectionDetailClient
       collection={collection}
@@ -56,6 +70,7 @@ export default async function CollectionDetailPage({ params }: Props) {
       friends={friendships.friends}
       isOwner={isOwner}
       currentUserId={user!.id}
+      watchedIds={watchedIds}
     />
   );
 }

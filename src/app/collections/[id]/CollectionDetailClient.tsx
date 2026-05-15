@@ -82,6 +82,7 @@ interface Props {
   friends: Friendship[];
   isOwner: boolean;
   currentUserId: string;
+  watchedIds: number[];
 }
 
 export default function CollectionDetailClient({
@@ -92,6 +93,7 @@ export default function CollectionDetailClient({
   friends,
   isOwner,
   currentUserId,
+  watchedIds,
 }: Props) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -110,6 +112,7 @@ export default function CollectionDetailClient({
   const isMember = members.some((m) => m.user_id === currentUserId);
   const canEdit = isOwner || isMember;
   const canDelete = isOwner;
+  const watchedSet = new Set(watchedIds);
 
   const memberUserIds = new Set(members.map((m) => m.user_id));
   const invitableFriends = friends.filter(
@@ -421,6 +424,7 @@ export default function CollectionDetailClient({
                     tmdbId={movie.tmdb_movie_id}
                     title={movie.movie_title || `Movie #${movie.tmdb_movie_id}`}
                     posterPath={movie.movie_poster_path || null}
+                    watched={watchedSet.has(movie.tmdb_movie_id)}
                   />
 
                   {isEditingMovies && canEdit && (
