@@ -177,35 +177,36 @@ export default function CollectionsClient({ initialCollections, initialInvitatio
           <section className={styles.invitationsSection}>
             <h2 className="section-title"><IconUser /> {t("social.collectionInvites")}</h2>
             <div className={styles.invitesList}>
-              {invitations.map((inv) => (
-                <div key={inv.id} className={styles.inviteCard}>
-                  <div className={styles.inviteInfo}>
-                    <strong>{inv.collection?.name || "Colección"}</strong>
-                    <span>
-                      {t("social.invitedBy").replace(
-                        "{name}",
-                        inv.inviter?.display_name || inv.inviter?.email || "Usuario"
-                      )}
-                    </span>
+              {invitations.map((inv) => {
+                const inviterName =
+                  inv.inviter?.display_name ||
+                  inv.inviter?.email ||
+                  t("invitations.inviterFallback");
+                return (
+                  <div key={inv.id} className={styles.inviteCard}>
+                    <div className={styles.inviteInfo}>
+                      <strong>{inv.collection?.name ?? ""}</strong>
+                      <span>{t("social.invitedBy").replace("{name}", inviterName)}</span>
+                    </div>
+                    <div className={styles.inviteActions}>
+                      <button
+                        onClick={() => handleRespond(inv.id, "declined")}
+                        className="btn btn-ghost btn-icon"
+                        title={t("social.decline")}
+                      >
+                        <IconX />
+                      </button>
+                      <button
+                        onClick={() => handleRespond(inv.id, "accepted")}
+                        className="btn btn-primary btn-icon"
+                        title={t("social.accept")}
+                      >
+                        <IconCheck />
+                      </button>
+                    </div>
                   </div>
-                  <div className={styles.inviteActions}>
-                    <button
-                      onClick={() => handleRespond(inv.id, "declined")}
-                      className="btn btn-ghost btn-icon"
-                      title={t("social.decline")}
-                    >
-                      <IconX />
-                    </button>
-                    <button
-                      onClick={() => handleRespond(inv.id, "accepted")}
-                      className="btn btn-primary btn-icon"
-                      title={t("social.accept")}
-                    >
-                      <IconCheck />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
