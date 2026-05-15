@@ -34,8 +34,9 @@ export default async function CollectionDetailPage({ params }: Props) {
 
   const collection = collections.find((c) => c.id === id);
   if (!collection) notFound();
+  if (!user) notFound();
 
-  const isOwner = user?.id === collection.user_id;
+  const isOwner = user.id === collection.user_id;
 
   // Ensure owner is in members table (idempotent)
   if (isOwner) {
@@ -49,7 +50,7 @@ export default async function CollectionDetailPage({ params }: Props) {
   ]);
 
   let watchedIds: number[] = [];
-  if (user && movies.length > 0) {
+  if (movies.length > 0) {
     const supabase = await createClient();
     const tmdbIds = movies.map((m) => m.tmdb_movie_id);
     const { data: watchedRows } = await supabase
@@ -69,7 +70,7 @@ export default async function CollectionDetailPage({ params }: Props) {
       memberRatings={memberRatings}
       friends={friendships.friends}
       isOwner={isOwner}
-      currentUserId={user!.id}
+      currentUserId={user.id}
       watchedIds={watchedIds}
     />
   );
