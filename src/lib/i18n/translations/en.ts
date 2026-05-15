@@ -157,6 +157,10 @@ const en: Record<string, string> = {
   "collectionDetail.saving": "Saving...",
   "collectionDetail.deleting": "Deleting...",
   "collectionDetail.deleteConfirm": "Delete this collection? This action cannot be undone.",
+  "collectionDetail.editMovies": "Edit movies",
+  "collectionDetail.doneEditing": "Done",
+  "collectionDetail.removeMovie": "Remove from collection",
+  "collectionDetail.confirmRemove": "Tap again to confirm",
 
   // Rating grades
   "rating.S": "Masterpiece",
