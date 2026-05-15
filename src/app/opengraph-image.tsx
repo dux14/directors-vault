@@ -39,7 +39,7 @@ export default function OpengraphImage() {
             letterSpacing: -0.5,
           }}
         >
-          Director's Vault — tu bóveda personal de cine
+          Director&apos;s Vault — tu bóveda personal de cine
         </div>
       </div>
     ),
