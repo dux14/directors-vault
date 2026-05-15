@@ -55,6 +55,7 @@ export default async function CollectionDetailPage({ params }: Props) {
       memberRatings={memberRatings}
       friends={friendships.friends}
       isOwner={isOwner}
+      currentUserId={user!.id}
     />
   );
 }

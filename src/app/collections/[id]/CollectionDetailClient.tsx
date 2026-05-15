@@ -68,6 +68,7 @@ interface Props {
   memberRatings: MemberRatings;
   friends: Friendship[];
   isOwner: boolean;
+  currentUserId: string;
 }
 
 export default function CollectionDetailClient({
@@ -77,6 +78,7 @@ export default function CollectionDetailClient({
   memberRatings,
   friends,
   isOwner,
+  currentUserId,
 }: Props) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -89,6 +91,9 @@ export default function CollectionDetailClient({
   const [deleting, setDeleting] = useState(false);
 
   const isShared = members.length > 0;
+  const isMember = members.some((m) => m.user_id === currentUserId);
+  const canEdit = isOwner || isMember;
+  const canDelete = isOwner;
 
   const memberUserIds = new Set(members.map((m) => m.user_id));
   const invitableFriends = friends.filter(
@@ -166,26 +171,30 @@ export default function CollectionDetailClient({
                 </span>
               )}
             </h1>
-            {isOwner && (
+            {(canEdit || canDelete) && (
               <div style={{ display: "flex", gap: "var(--space-xs)", flexShrink: 0 }}>
-                <button
-                  onClick={() => { setEditName(collection.name); setEditType(collection.type); setShowEdit(true); }}
-                  className="btn btn-ghost btn-icon btn-sm"
-                  title={t("collectionDetail.edit")}
-                  id="edit-collection-btn"
-                >
-                  <IconEdit />
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="btn btn-ghost btn-icon btn-sm"
-                  title={t("general.delete")}
-                  id="delete-collection-btn"
-                  style={{ color: "var(--color-error, #e05c5c)" }}
-                >
-                  <IconTrash />
-                </button>
+                {canEdit && (
+                  <button
+                    onClick={() => { setEditName(collection.name); setEditType(collection.type); setShowEdit(true); }}
+                    className="btn btn-ghost btn-icon btn-sm"
+                    title={t("collectionDetail.edit")}
+                    id="edit-collection-btn"
+                  >
+                    <IconEdit />
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="btn btn-ghost btn-icon btn-sm"
+                    title={t("general.delete")}
+                    id="delete-collection-btn"
+                    style={{ color: "var(--color-error, #e05c5c)" }}
+                  >
+                    <IconTrash />
+                  </button>
+                )}
               </div>
             )}
           </div>
