@@ -31,20 +31,40 @@ export interface CollectionInvitation {
   inviter?: { display_name: string | null; email: string };
 }
 
-/** Get members of a collection with their profiles */
+/** Get members of a collection with their profiles.
+ * Uses two queries — collection_members.user_id has no FK to user_profiles
+ * that PostgREST can resolve (the FK targets auth.users), so the embed
+ * shorthand `profile:user_profiles(...)` would fail. */
 export async function getCollectionMembers(
   collectionId: string
 ): Promise<CollectionMember[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data: members, error } = await supabase
     .from("collection_members")
-    .select("*, profile:profiles(display_name, email, avatar_url)")
+    .select("id, user_id, role, joined_at")
     .eq("collection_id", collectionId)
     .order("joined_at", { ascending: true });
 
-  if (error) return [];
-  return (data || []) as CollectionMember[];
+  if (error || !members || members.length === 0) return [];
+
+  const userIds = Array.from(new Set(members.map((m) => m.user_id)));
+  const { data: profiles } = await supabase
+    .from("user_profiles")
+    .select("id, display_name, email, avatar_url")
+    .in("id", userIds);
+
+  const profileMap = new Map(
+    (profiles || []).map((p) => [
+      p.id,
+      { display_name: p.display_name, email: p.email, avatar_url: p.avatar_url },
+    ])
+  );
+
+  return members.map((m) => ({
+    ...m,
+    profile: profileMap.get(m.user_id),
+  })) as CollectionMember[];
 }
 
 /** Invite a friend to a collection */
@@ -190,10 +210,11 @@ export async function getCollectionMemberRatings(
 > {
   const supabase = await createClient();
 
-  // Get members
+  // Get members (display names are fetched in a separate user_profiles query below
+  // because collection_members has no PostgREST-resolvable FK to user_profiles)
   const { data: members } = await supabase
     .from("collection_members")
-    .select("user_id, profile:profiles(display_name)")
+    .select("user_id")
     .eq("collection_id", collectionId);
 
   if (!members || members.length === 0) return {};
@@ -229,7 +250,7 @@ export async function getCollectionMemberRatings(
 
   // Get profiles for all users
   const { data: profiles } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("id, display_name")
     .in("id", userIdArray);
 
