@@ -134,6 +134,7 @@ const es = {
   "social.accept": "Aceptar",
   "social.decline": "Rechazar",
   "social.invitedBy": "Invitado por {name}",
+  "invitations.inviterFallback": "Alguien",
 
   // Movie — add to collection
   "movie.addToCollection": "Agregar a colección",

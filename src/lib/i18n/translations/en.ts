@@ -134,6 +134,7 @@ const en: Record<string, string> = {
   "social.accept": "Accept",
   "social.decline": "Decline",
   "social.invitedBy": "Invited by {name}",
+  "invitations.inviterFallback": "Someone",
 
   // Movie — add to collection
   "movie.addToCollection": "Add to collection",
