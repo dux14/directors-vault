@@ -24,6 +24,7 @@ interface MovieCardProps {
   rank?: number;
   showRank?: boolean;
   size?: "small" | "medium" | "large";
+  watched?: boolean;
 }
 
 export default function MovieCard({
@@ -37,6 +38,7 @@ export default function MovieCard({
   rank,
   showRank = false,
   size = "medium",
+  watched = false,
 }: MovieCardProps) {
   const year = releaseDate ? new Date(releaseDate).getFullYear() : null;
   const grade = userRating ? ratingToGrade(userRating) : null;
@@ -74,7 +76,16 @@ export default function MovieCard({
             }
             className={styles.poster}
             unoptimized={!posterPath}
+            style={watched ? { opacity: 0.85 } : undefined}
           />
+
+          {watched && (
+            <div className={styles.watchedBadge} aria-label="watched" title="watched">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a0a0f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+          )}
 
           {/* Status indicator dot */}
           {status && (

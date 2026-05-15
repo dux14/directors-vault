@@ -53,6 +53,19 @@ const IconTrash = () => (
   </svg>
 );
 
+const IconXSmall = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const IconCheckSmall = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
 interface MemberRatings {
   [movieId: number]: {
     user_id: string;
@@ -68,6 +81,8 @@ interface Props {
   memberRatings: MemberRatings;
   friends: Friendship[];
   isOwner: boolean;
+  currentUserId: string;
+  watchedIds: number[];
 }
 
 export default function CollectionDetailClient({
@@ -77,6 +92,8 @@ export default function CollectionDetailClient({
   memberRatings,
   friends,
   isOwner,
+  currentUserId,
+  watchedIds,
 }: Props) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -87,8 +104,15 @@ export default function CollectionDetailClient({
   const [editType, setEditType] = useState<CollectionType>(collection.type);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isEditingMovies, setIsEditingMovies] = useState(false);
+  const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const isShared = members.length > 0;
+  const isMember = members.some((m) => m.user_id === currentUserId);
+  const canEdit = isOwner || isMember;
+  const canDelete = isOwner;
+  const watchedSet = new Set(watchedIds);
 
   const memberUserIds = new Set(members.map((m) => m.user_id));
   const invitableFriends = friends.filter(
@@ -133,6 +157,23 @@ export default function CollectionDetailClient({
     }
   };
 
+  const handleMovieClickToRemove = async (tmdbMovieId: number) => {
+    if (removing) return;
+    if (pendingRemoval !== tmdbMovieId) {
+      setPendingRemoval(tmdbMovieId);
+      return;
+    }
+    setRemoving(true);
+    try {
+      await removeMovieFromCollection(collection.id, tmdbMovieId);
+      setPendingRemoval(null);
+      router.refresh();
+    } catch (err) {
+      console.error("Remove movie error:", err);
+    }
+    setRemoving(false);
+  };
+
   // Calculate average rating for a movie across all members
   const getAvgRating = (movieId: number): number | null => {
     const ratings = memberRatings[movieId];
@@ -166,26 +207,30 @@ export default function CollectionDetailClient({
                 </span>
               )}
             </h1>
-            {isOwner && (
+            {(canEdit || canDelete) && (
               <div style={{ display: "flex", gap: "var(--space-xs)", flexShrink: 0 }}>
-                <button
-                  onClick={() => { setEditName(collection.name); setEditType(collection.type); setShowEdit(true); }}
-                  className="btn btn-ghost btn-icon btn-sm"
-                  title={t("collectionDetail.edit")}
-                  id="edit-collection-btn"
-                >
-                  <IconEdit />
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="btn btn-ghost btn-icon btn-sm"
-                  title={t("general.delete")}
-                  id="delete-collection-btn"
-                  style={{ color: "var(--color-error, #e05c5c)" }}
-                >
-                  <IconTrash />
-                </button>
+                {canEdit && (
+                  <button
+                    onClick={() => { setEditName(collection.name); setEditType(collection.type); setShowEdit(true); }}
+                    className="btn btn-ghost btn-icon btn-sm"
+                    title={t("collectionDetail.edit")}
+                    id="edit-collection-btn"
+                  >
+                    <IconEdit />
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="btn btn-ghost btn-icon btn-sm"
+                    title={t("general.delete")}
+                    id="delete-collection-btn"
+                    style={{ color: "var(--color-error, #e05c5c)" }}
+                  >
+                    <IconTrash />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -343,6 +388,23 @@ export default function CollectionDetailClient({
           )}
         </AnimatePresence>
 
+        {canEdit && initialMovies.length > 0 && (
+          <div className={styles.editMoviesBar}>
+            <button
+              onClick={() => {
+                setIsEditingMovies((prev) => !prev);
+                setPendingRemoval(null);
+              }}
+              className={`btn ${isEditingMovies ? "btn-primary" : "btn-ghost"} btn-sm`}
+              id="toggle-edit-movies-btn"
+            >
+              {isEditingMovies
+                ? t("collectionDetail.doneEditing")
+                : t("collectionDetail.editMovies")}
+            </button>
+          </div>
+        )}
+
         {/* Movie Grid with Ratings */}
         {initialMovies.length > 0 ? (
           <div className="movie-grid">
@@ -351,14 +413,41 @@ export default function CollectionDetailClient({
               const avgGrade = avg !== null ? ratingToGrade(Math.round(avg)) : null;
               const avgColor = avg !== null ? getRatingColor(Math.round(avg)) : undefined;
               const movieRatings = isShared ? memberRatings[movie.tmdb_movie_id] : null;
+              const isPending = pendingRemoval === movie.tmdb_movie_id;
 
               return (
-                <div key={movie.id} style={{ position: "relative" }}>
+                <div
+                  key={movie.id}
+                  className={`${styles.movieCell} ${isEditingMovies ? styles.editing : ""} ${isPending ? styles.pendingRemoval : ""}`}
+                >
                   <MovieCard
                     tmdbId={movie.tmdb_movie_id}
                     title={movie.movie_title || `Movie #${movie.tmdb_movie_id}`}
                     posterPath={movie.movie_poster_path || null}
+                    watched={watchedSet.has(movie.tmdb_movie_id)}
                   />
+
+                  {isEditingMovies && canEdit && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleMovieClickToRemove(movie.tmdb_movie_id);
+                      }}
+                      disabled={removing}
+                      className={styles.removeButton}
+                      title={
+                        isPending
+                          ? t("collectionDetail.confirmRemove")
+                          : t("collectionDetail.removeMovie")
+                      }
+                      aria-label={t("collectionDetail.removeMovie")}
+                    >
+                      {isPending ? <IconCheckSmall /> : <IconXSmall />}
+                    </button>
+                  )}
+
                   {/* Individual + Avg Ratings for shared collections */}
                   {isShared && movieRatings && (
                     <div className={styles.ratingOverlay}>

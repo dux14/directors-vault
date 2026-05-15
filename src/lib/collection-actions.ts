@@ -31,20 +31,40 @@ export interface CollectionInvitation {
   inviter?: { display_name: string | null; email: string };
 }
 
-/** Get members of a collection with their profiles */
+/** Get members of a collection with their profiles.
+ * Uses two queries — collection_members.user_id has no FK to user_profiles
+ * that PostgREST can resolve (the FK targets auth.users), so the embed
+ * shorthand `profile:user_profiles(...)` would fail. */
 export async function getCollectionMembers(
   collectionId: string
 ): Promise<CollectionMember[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data: members, error } = await supabase
     .from("collection_members")
-    .select("*, profile:profiles(display_name, email, avatar_url)")
+    .select("id, user_id, role, joined_at")
     .eq("collection_id", collectionId)
     .order("joined_at", { ascending: true });
 
-  if (error) return [];
-  return (data || []) as CollectionMember[];
+  if (error || !members || members.length === 0) return [];
+
+  const userIds = Array.from(new Set(members.map((m) => m.user_id)));
+  const { data: profiles } = await supabase
+    .from("user_profiles")
+    .select("id, display_name, email, avatar_url")
+    .in("id", userIds);
+
+  const profileMap = new Map(
+    (profiles || []).map((p) => [
+      p.id,
+      { display_name: p.display_name, email: p.email, avatar_url: p.avatar_url },
+    ])
+  );
+
+  return members.map((m) => ({
+    ...m,
+    profile: profileMap.get(m.user_id),
+  })) as CollectionMember[];
 }
 
 /** Invite a friend to a collection */
@@ -136,45 +156,47 @@ export async function respondToInvitation(
   return { success: true };
 }
 
-/** Get pending invitations for the current user */
+/** Get pending invitations for the current user — uses SECURITY DEFINER RPC
+ * to bypass the RLS limitation that hides collections from pending invitees. */
 export async function getPendingInvitations(): Promise<CollectionInvitation[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
 
-  const { data, error } = await supabase
-    .from("collection_invitations")
-    .select("*, collection:collections(name, type)")
-    .eq("invitee_id", user.id)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false });
+  const { data, error } = await supabase.rpc("get_pending_invitations_for_user");
 
-  if (error || !data || data.length === 0) return [];
+  if (error || !data) {
+    if (error) console.error("getPendingInvitations RPC failed:", error.message);
+    return [];
+  }
 
-  // Fetch inviter profiles separately — no FK from collection_invitations.inviter_id
-  // to public.profiles exists (it references auth.users(id)), so PostgREST cannot
-  // resolve a relationship hint here.
-  const inviterIds = Array.from(
-    new Set(data.map((i: { inviter_id: string }) => i.inviter_id))
-  );
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, display_name, email")
-    .in("id", inviterIds);
-
-  const profileMap = new Map(
-    (profiles || []).map((p: { id: string; display_name: string | null; email: string }) => [
-      p.id,
-      { display_name: p.display_name, email: p.email },
-    ])
-  );
-
-  return data.map((i: { inviter_id: string }) => ({
-    ...i,
-    inviter: profileMap.get(i.inviter_id),
-  })) as CollectionInvitation[];
+  return (
+    data as Array<{
+      id: string;
+      collection_id: string;
+      status: "pending" | "accepted" | "declined";
+      created_at: string;
+      collection_name: string;
+      collection_type: string;
+      inviter_display_name: string | null;
+      inviter_email: string | null;
+    }>
+  ).map((row) => ({
+    id: row.id,
+    collection_id: row.collection_id,
+    inviter_id: "",
+    invitee_id: "",
+    status: row.status,
+    created_at: row.created_at,
+    collection: {
+      name: row.collection_name,
+      type: row.collection_type,
+    },
+    inviter: row.inviter_email
+      ? {
+          display_name: row.inviter_display_name,
+          email: row.inviter_email,
+        }
+      : undefined,
+  }));
 }
 
 /** Get ratings from all members for movies in a shared collection */
@@ -188,10 +210,11 @@ export async function getCollectionMemberRatings(
 > {
   const supabase = await createClient();
 
-  // Get members
+  // Get members (display names are fetched in a separate user_profiles query below
+  // because collection_members has no PostgREST-resolvable FK to user_profiles)
   const { data: members } = await supabase
     .from("collection_members")
-    .select("user_id, profile:profiles(display_name)")
+    .select("user_id")
     .eq("collection_id", collectionId);
 
   if (!members || members.length === 0) return {};
@@ -227,7 +250,7 @@ export async function getCollectionMemberRatings(
 
   // Get profiles for all users
   const { data: profiles } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("id, display_name")
     .in("id", userIdArray);
 

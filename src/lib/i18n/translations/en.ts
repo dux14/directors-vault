@@ -134,6 +134,7 @@ const en: Record<string, string> = {
   "social.accept": "Accept",
   "social.decline": "Decline",
   "social.invitedBy": "Invited by {name}",
+  "invitations.inviterFallback": "Someone",
 
   // Movie — add to collection
   "movie.addToCollection": "Add to collection",
@@ -156,6 +157,10 @@ const en: Record<string, string> = {
   "collectionDetail.saving": "Saving...",
   "collectionDetail.deleting": "Deleting...",
   "collectionDetail.deleteConfirm": "Delete this collection? This action cannot be undone.",
+  "collectionDetail.editMovies": "Edit movies",
+  "collectionDetail.doneEditing": "Done",
+  "collectionDetail.removeMovie": "Remove from collection",
+  "collectionDetail.confirmRemove": "Tap again to confirm",
 
   // Rating grades
   "rating.S": "Masterpiece",
