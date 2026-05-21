@@ -8,8 +8,6 @@ import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
 import { LanguageProvider } from "@/lib/i18n/context";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: {
@@ -43,8 +41,6 @@ export default function RootLayout({
           <main className="main-content">{children}</main>
           <BottomNav />
         </LanguageProvider>
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );
