@@ -491,7 +491,6 @@ a:hover {
 /* ---- Page Layout ---- */
 .page {
   min-height: 100dvh;
-  padding-top: var(--nav-height);
   padding-bottom: calc(var(--bottom-nav-height) + var(--space-lg));
 }
 

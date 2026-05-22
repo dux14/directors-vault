@@ -91,7 +91,7 @@ export default function HomeClient({
   return (
     <div className="page">
       <div className="container">
-        <div className={`page-header ${styles.header}`}>
+        <div className="page-header">
           <h1>
             <span className={styles.accent}>{t("home.myRanking").split(" ")[0]}</span>{" "}
             {t("home.myRanking").split(" ").slice(1).join(" ")}
