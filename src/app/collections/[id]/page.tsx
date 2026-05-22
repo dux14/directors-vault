@@ -15,6 +15,7 @@ import {
   ensureOwnerMember,
 } from "@/lib/collection-actions";
 import { getFriendships } from "@/lib/social-actions";
+import { getServerView } from "@/lib/view/server";
 import CollectionDetailClient from "./CollectionDetailClient";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -26,10 +27,11 @@ interface Props {
 export default async function CollectionDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const [collections, movies, user] = await Promise.all([
+  const [collections, movies, user, initialView] = await Promise.all([
     getUserCollections(),
     getCollectionMovies(id),
     getCurrentUser(),
+    getServerView(),
   ]);
 
   const collection = collections.find((c) => c.id === id);
@@ -72,6 +74,7 @@ export default async function CollectionDetailPage({ params }: Props) {
       isOwner={isOwner}
       currentUserId={user.id}
       watchedIds={watchedIds}
+      initialView={initialView}
     />
   );
 }

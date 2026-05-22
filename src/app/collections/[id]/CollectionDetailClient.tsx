@@ -8,14 +8,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import MovieCard from "@/components/MovieCard";
+import MovieListRow from "@/components/MovieListRow";
+import ViewToggle from "@/components/ViewToggle";
 import { removeMovieFromCollection, updateCollection, deleteCollection } from "@/lib/actions";
 import {
   inviteToCollection,
   type CollectionMember,
 } from "@/lib/collection-actions";
 import { useTranslation } from "@/lib/i18n/context";
+import { useView } from "@/lib/view/client";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
 import type { Collection, CollectionMovie, Friendship, CollectionType } from "@/lib/types";
+import type { ViewMode } from "@/lib/view/types";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./collectionDetail.module.css";
 
@@ -83,6 +87,7 @@ interface Props {
   isOwner: boolean;
   currentUserId: string;
   watchedIds: number[];
+  initialView?: ViewMode;
 }
 
 export default function CollectionDetailClient({
@@ -94,6 +99,7 @@ export default function CollectionDetailClient({
   isOwner,
   currentUserId,
   watchedIds,
+  initialView = "grid",
 }: Props) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -107,6 +113,7 @@ export default function CollectionDetailClient({
   const [isEditingMovies, setIsEditingMovies] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [view, setView] = useView(initialView);
 
   const isShared = members.length > 0;
   const isMember = members.some((m) => m.user_id === currentUserId);
@@ -388,25 +395,40 @@ export default function CollectionDetailClient({
           )}
         </AnimatePresence>
 
-        {canEdit && initialMovies.length > 0 && (
-          <div className={styles.editMoviesBar}>
-            <button
-              onClick={() => {
-                setIsEditingMovies((prev) => !prev);
-                setPendingRemoval(null);
-              }}
-              className={`btn ${isEditingMovies ? "btn-primary" : "btn-ghost"} btn-sm`}
-              id="toggle-edit-movies-btn"
-            >
-              {isEditingMovies
-                ? t("collectionDetail.doneEditing")
-                : t("collectionDetail.editMovies")}
-            </button>
+        {initialMovies.length > 0 && (
+          <div className={styles.editMoviesBar} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)" }}>
+            {canEdit ? (
+              <button
+                onClick={() => {
+                  setIsEditingMovies((prev) => !prev);
+                  setPendingRemoval(null);
+                }}
+                className={`btn ${isEditingMovies ? "btn-primary" : "btn-ghost"} btn-sm`}
+                id="toggle-edit-movies-btn"
+              >
+                {isEditingMovies
+                  ? t("collectionDetail.doneEditing")
+                  : t("collectionDetail.editMovies")}
+              </button>
+            ) : <span />}
+            {!isEditingMovies && <ViewToggle value={view} onChange={setView} />}
           </div>
         )}
 
-        {/* Movie Grid with Ratings */}
-        {initialMovies.length > 0 ? (
+        {/* Movies — list view (skipped when editing to keep remove UX simple) */}
+        {initialMovies.length > 0 && view === "list" && !isEditingMovies ? (
+          <div className="movie-list">
+            {initialMovies.map((movie) => (
+              <MovieListRow
+                key={movie.id}
+                tmdbId={movie.tmdb_movie_id}
+                title={movie.movie_title || `Movie #${movie.tmdb_movie_id}`}
+                posterPath={movie.movie_poster_path || null}
+                watched={watchedSet.has(movie.tmdb_movie_id)}
+              />
+            ))}
+          </div>
+        ) : initialMovies.length > 0 ? (
           <div className="movie-grid">
             {initialMovies.map((movie) => {
               const avg = isShared ? getAvgRating(movie.tmdb_movie_id) : null;
