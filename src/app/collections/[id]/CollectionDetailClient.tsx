@@ -233,7 +233,7 @@ export default function CollectionDetailClient({
                     className="btn btn-ghost btn-icon btn-sm"
                     title={t("general.delete")}
                     id="delete-collection-btn"
-                    style={{ color: "var(--color-error, #e05c5c)" }}
+                    style={{ color: "var(--danger)" }}
                   >
                     <IconTrash />
                   </button>

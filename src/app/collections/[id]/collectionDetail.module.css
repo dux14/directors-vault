@@ -50,7 +50,7 @@
 }
 
 .movieCell.pendingRemoval {
-  outline-color: #e05c5c;
+  outline-color: var(--danger);
   transform: scale(1.04);
 }
 
@@ -62,8 +62,8 @@
   height: 26px;
   border-radius: 50%;
   border: none;
-  background: #e05c5c;
-  color: #fff;
+  background: var(--danger);
+  color: var(--text-1);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -76,7 +76,7 @@
 }
 
 .removeButton:hover {
-  background: #d04848;
+  background: #e85555;
 }
 
 .removeButton:disabled {
@@ -85,5 +85,5 @@
 }
 
 .pendingRemoval .removeButton {
-  background: #4caf50;
+  background: var(--success);
 }
