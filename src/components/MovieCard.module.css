@@ -140,7 +140,7 @@
 .rankTop {
   background: var(--gradient-accent);
   border-color: var(--accent-primary);
-  color: #0a0a0f;
+  color: var(--bg-deep);
   box-shadow: var(--shadow-glow);
 }
 
@@ -151,7 +151,8 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--accent-primary, #d4a843);
+  background: var(--accent-primary);
+  color: var(--bg-deep);
   display: grid;
   place-items: center;
   z-index: 2;

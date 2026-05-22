@@ -11,7 +11,7 @@ export default function OpengraphImage() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#0a0a0f",
+          background: "#0c0805",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -33,7 +33,7 @@ export default function OpengraphImage() {
         </div>
         <div
           style={{
-            color: "#f5f5f0",
+            color: "#fff5e6",
             fontSize: 36,
             fontWeight: 500,
             letterSpacing: -0.5,

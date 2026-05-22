@@ -24,10 +24,10 @@ export default function RatingSlider({
   const displayValue = hoverValue ?? value;
 
   const getColor = (val: number) => {
-    if (val >= 8) return "#4ade80";
-    if (val >= 6) return "#d4a843";
-    if (val >= 4) return "#f0a030";
-    return "#f87171";
+    if (val >= 8) return "var(--success)";
+    if (val >= 6) return "var(--accent)";
+    if (val >= 4) return "var(--warning)";
+    return "var(--danger)";
   };
 
   return (
