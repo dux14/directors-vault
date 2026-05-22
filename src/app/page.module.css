@@ -2,20 +2,9 @@
  * Home Page Styles
  * ============================================ */
 
-.header {
-  padding-top: var(--space-xl);
-}
-
 .accent {
   background: var(--gradient-accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-/* Desktop offset for sidebar */
-@media (min-width: 768px) {
-  .header {
-    padding-top: var(--space-2xl);
-  }
 }
