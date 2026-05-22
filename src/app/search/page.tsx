@@ -17,6 +17,9 @@ import {
   type TMDBPersonSearchResult,
 } from "@/lib/tmdb";
 import MovieCard from "@/components/MovieCard";
+import MovieListRow from "@/components/MovieListRow";
+import ViewToggle from "@/components/ViewToggle";
+import { useView } from "@/lib/view/client";
 import styles from "./search.module.css";
 
 /* ---- SVG Icons ---- */
@@ -73,6 +76,7 @@ export default function SearchPage() {
   const [trending, setTrending] = useState<TMDBMovie[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [view, setView] = useView();
 
   // Load trending on mount
   useEffect(() => {
@@ -170,33 +174,49 @@ export default function SearchPage() {
 
         {/* Results header */}
         {searched && !loading && (
-          <div className={styles.resultsHeader}>
+          <div className={styles.resultsHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)" }}>
             <h2 className="section-title">
               {tab === "movies"
                 ? `${movieResults.length} resultado${movieResults.length !== 1 ? "s" : ""}`
                 : `${personResults.length} persona${personResults.length !== 1 ? "s" : ""}`}
             </h2>
+            {tab === "movies" && <ViewToggle value={view} onChange={setView} />}
           </div>
         )}
 
         {/* Trending (only when not searching and on movies tab) */}
         {!searched && tab === "movies" && trending.length > 0 && (
           <>
-            <div className={styles.resultsHeader}>
+            <div className={styles.resultsHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)" }}>
               <h2 className="section-title"><IconFlame /> Popular hoy</h2>
+              <ViewToggle value={view} onChange={setView} />
             </div>
-            <div className="movie-grid">
-              {trending.map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  tmdbId={movie.id}
-                  title={movie.title}
-                  posterPath={movie.poster_path}
-                  releaseDate={movie.release_date}
-                  rating={movie.vote_average}
-                />
-              ))}
-            </div>
+            {view === "grid" ? (
+              <div className="movie-grid">
+                {trending.map((movie) => (
+                  <MovieCard
+                    key={movie.id}
+                    tmdbId={movie.id}
+                    title={movie.title}
+                    posterPath={movie.poster_path}
+                    releaseDate={movie.release_date}
+                    rating={movie.vote_average}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="movie-list">
+                {trending.map((movie) => (
+                  <MovieListRow
+                    key={movie.id}
+                    tmdbId={movie.id}
+                    title={movie.title}
+                    posterPath={movie.poster_path}
+                    releaseDate={movie.release_date}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
 
@@ -213,18 +233,32 @@ export default function SearchPage() {
 
         {/* Movie results */}
         {!loading && searched && tab === "movies" && movieResults.length > 0 && (
-          <div className="movie-grid">
-            {movieResults.map((movie) => (
-              <MovieCard
-                key={movie.id}
-                tmdbId={movie.id}
-                title={movie.title}
-                posterPath={movie.poster_path}
-                releaseDate={movie.release_date}
-                rating={movie.vote_average}
-              />
-            ))}
-          </div>
+          view === "grid" ? (
+            <div className="movie-grid">
+              {movieResults.map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  tmdbId={movie.id}
+                  title={movie.title}
+                  posterPath={movie.poster_path}
+                  releaseDate={movie.release_date}
+                  rating={movie.vote_average}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="movie-list">
+              {movieResults.map((movie) => (
+                <MovieListRow
+                  key={movie.id}
+                  tmdbId={movie.id}
+                  title={movie.title}
+                  posterPath={movie.poster_path}
+                  releaseDate={movie.release_date}
+                />
+              ))}
+            </div>
+          )
         )}
 
         {/* Person results */}

@@ -4,6 +4,7 @@
 
 import { getUserCollections } from "@/lib/actions";
 import { getPendingInvitations } from "@/lib/collection-actions";
+import { getServerView } from "@/lib/view/server";
 import CollectionsClient from "./CollectionsClient";
 import type { Metadata } from "next";
 
@@ -13,10 +14,17 @@ export const metadata: Metadata = {
 };
 
 export default async function CollectionsPage() {
-  const [collections, invitations] = await Promise.all([
+  const [collections, invitations, initialView] = await Promise.all([
     getUserCollections().catch(() => []),
-    getPendingInvitations().catch(() => [])
+    getPendingInvitations().catch(() => []),
+    getServerView(),
   ]);
 
-  return <CollectionsClient initialCollections={collections} initialInvitations={invitations} />;
+  return (
+    <CollectionsClient
+      initialCollections={collections}
+      initialInvitations={invitations}
+      initialView={initialView}
+    />
+  );
 }

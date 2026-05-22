@@ -529,6 +529,12 @@ a:hover {
   gap: var(--space-md);
 }
 
+.movie-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 /* ---- Section ---- */
 .section {
   margin-bottom: var(--space-2xl);

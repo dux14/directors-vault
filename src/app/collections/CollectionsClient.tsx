@@ -12,7 +12,11 @@ import { createCollection, deleteCollection } from "@/lib/actions";
 import { respondToInvitation } from "@/lib/collection-actions";
 import type { CollectionInvitation } from "@/lib/collection-actions";
 import { useTranslation } from "@/lib/i18n/context";
+import { useView } from "@/lib/view/client";
+import type { ViewMode } from "@/lib/view/types";
 import type { Collection, CollectionType } from "@/lib/types";
+import CollectionListRow from "@/components/CollectionListRow";
+import ViewToggle from "@/components/ViewToggle";
 import styles from "./collections.module.css";
 
 /* ---- SVG Icons ---- */
@@ -88,14 +92,16 @@ const COLLECTION_TYPE_ICONS: { value: CollectionType; icon: React.ReactNode }[] 
 interface Props {
   initialCollections: Collection[];
   initialInvitations?: CollectionInvitation[];
+  initialView?: ViewMode;
 }
 
-export default function CollectionsClient({ initialCollections, initialInvitations = [] }: Props) {
+export default function CollectionsClient({ initialCollections, initialInvitations = [], initialView = "grid" }: Props) {
   const router = useRouter();
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const [collections, setCollections] = useState(initialCollections);
   const [invitations, setInvitations] = useState(initialInvitations);
+  const [view, setView] = useView(initialView);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<CollectionType>("custom");
@@ -289,37 +295,56 @@ export default function CollectionsClient({ initialCollections, initialInvitatio
           )}
         </AnimatePresence>
 
-        {/* Collections Grid */}
+        {/* View toggle + Collections */}
         {collections.length > 0 ? (
-          <div className={`collection-grid ${styles.grid}`}>
-            {collections.map((collection, index) => (
-              <motion.div
-                key={collection.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Link
-                  href={`/collections/${collection.id}`}
-                  className={styles.collectionCard}
-                  id={`collection-${collection.id}`}
-                >
-                  <div className={styles.collectionIcon}>
-                    {getTypeIcon(collection.type)}
-                  </div>
-                  <h3 className={styles.collectionName}>{collection.name}</h3>
-                  {collection.description && (
-                    <p className={styles.collectionDesc}>
-                      {collection.description}
-                    </p>
-                  )}
-                  <span className={`tag ${styles.collectionType}`}>
-                    {t(`collections.type.${collection.type}`)}
-                  </span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+          <>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "var(--space-md)" }}>
+              <ViewToggle value={view} onChange={setView} />
+            </div>
+
+            {view === "grid" ? (
+              <div className={`collection-grid ${styles.grid}`}>
+                {collections.map((collection, index) => (
+                  <motion.div
+                    key={collection.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Link
+                      href={`/collections/${collection.id}`}
+                      className={styles.collectionCard}
+                      id={`collection-${collection.id}`}
+                    >
+                      <div className={styles.collectionIcon}>
+                        {getTypeIcon(collection.type)}
+                      </div>
+                      <h3 className={styles.collectionName}>{collection.name}</h3>
+                      {collection.description && (
+                        <p className={styles.collectionDesc}>
+                          {collection.description}
+                        </p>
+                      )}
+                      <span className={`tag ${styles.collectionType}`}>
+                        {t(`collections.type.${collection.type}`)}
+                      </span>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="movie-list">
+                {collections.map((collection) => (
+                  <CollectionListRow
+                    key={collection.id}
+                    collection={collection}
+                    icon={getTypeIcon(collection.type)}
+                    typeLabel={t(`collections.type.${collection.type}`)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <div className="empty-state">
             <div className="icon"><IconFolder size={48} /></div>
