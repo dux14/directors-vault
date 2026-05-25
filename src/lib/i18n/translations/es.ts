@@ -145,6 +145,10 @@ const es = {
   "movie.createCollection": "Crear colección",
   "movie.newCollectionName": "Nombre de la colección",
   "movie.creating": "Creando...",
+  "movie.trailer": "Trailer",
+  "movie.whereToWatch": "Dónde ver",
+  "movie.streamOn": "Disponible en streaming",
+  "movie.rentOrBuy": "Alquilar o comprar",
 
   // Collection Detail
   "collectionDetail.back": "Colecciones",

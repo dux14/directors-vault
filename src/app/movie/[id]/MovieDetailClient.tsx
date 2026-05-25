@@ -101,7 +101,7 @@ interface Props {
 export default function MovieDetailClient({ movie, userMovie }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const { t } = useTranslation();
+  const { t, tmdbLocale } = useTranslation();
   const [currentStatus, setCurrentStatus] = useState<MovieStatus | null>(
     userMovie?.status || null
   );
@@ -129,6 +129,12 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const runtime = movie.runtime
     ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
     : null;
+  const trailer = movie.videos?.results.find(
+    (v) => v.type === "Trailer" && v.site === "YouTube"
+  );
+  const countryCode = tmdbLocale.split("-")[1]?.toUpperCase() || "US";
+  const watchProviders = movie["watch/providers"]?.results[countryCode];
+  const streamingProviders = watchProviders?.flatrate || watchProviders?.rent || watchProviders?.buy || [];
 
   const handleStatusChange = async (status: MovieStatus) => {
     setSaving(true);
@@ -304,6 +310,19 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                 <span className={styles.tmdbRating}>
                   <IconStar /> {movie.vote_average.toFixed(1)}
                 </span>
+              )}
+              {trailer && (
+                <a
+                  href={`https://youtube.com/watch?v=${trailer.key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.trailerBtn}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  {t("movie.trailer")}
+                </a>
               )}
             </div>
             <div className={styles.genres}>
@@ -636,6 +655,33 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
           <h2 className="section-title">{t("movie.synopsis")}</h2>
           <p className={styles.overview}>{movie.overview || t("movie.noSynopsis")}</p>
         </section>
+
+        {/* Streaming Providers */}
+        {streamingProviders.length > 0 && (
+          <section className={styles.section}>
+            <h2 className="section-title">{t("movie.whereToWatch")}</h2>
+            <div className={styles.providers}>
+              {streamingProviders.map((provider) => (
+                <a
+                  key={provider.provider_id}
+                  href={watchProviders?.link || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.providerChip}
+                >
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                    alt={provider.provider_name}
+                    width={32}
+                    height={32}
+                    className={styles.providerLogo}
+                  />
+                  <span>{provider.provider_name}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Director */}
         {director && (

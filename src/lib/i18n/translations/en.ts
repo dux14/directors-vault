@@ -145,6 +145,10 @@ const en: Record<string, string> = {
   "movie.createCollection": "Create collection",
   "movie.newCollectionName": "Collection name",
   "movie.creating": "Creating...",
+  "movie.trailer": "Trailer",
+  "movie.whereToWatch": "Where to watch",
+  "movie.streamOn": "Stream on",
+  "movie.rentOrBuy": "Rent or buy",
 
   // Collection Detail
   "collectionDetail.back": "Collections",
