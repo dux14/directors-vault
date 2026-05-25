@@ -1,6 +1,6 @@
 /* ============================================
  * Search Page — TMDB search with tabs
- * Movies | Actors | Directors
+ * Títulos | Personas
  * ============================================ */
 
 "use client";
@@ -9,17 +9,29 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  searchMovies,
+  searchMulti,
   searchPerson,
   getTrending,
+  getTrendingTv,
+  getGenres,
+  getTvGenres,
+  discoverMovies,
+  discoverTv,
+  movieToMediaItem,
+  tvToMediaItem,
   getProfileUrl,
   type TMDBMovie,
+  type TMDBTvShow,
+  type TMDBGenre,
   type TMDBPersonSearchResult,
+  type MediaItem,
 } from "@/lib/tmdb";
 import MovieCard from "@/components/MovieCard";
 import MovieListRow from "@/components/MovieListRow";
 import ViewToggle from "@/components/ViewToggle";
+import FilterPanel from "@/components/FilterPanel";
 import { useView } from "@/lib/view/client";
+import { useTranslation } from "@/lib/i18n/context";
 import styles from "./search.module.css";
 
 /* ---- SVG Icons ---- */
@@ -66,29 +78,100 @@ const IconSearchEmpty = () => (
   </svg>
 );
 
-type SearchTab = "movies" | "people";
+type SearchTab = "titles" | "people";
 
 export default function SearchPage() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<SearchTab>("movies");
-  const [movieResults, setMovieResults] = useState<TMDBMovie[]>([]);
+  const [tab, setTab] = useState<SearchTab>("titles");
+  const [titleResults, setTitleResults] = useState<MediaItem[]>([]);
   const [personResults, setPersonResults] = useState<TMDBPersonSearchResult[]>([]);
-  const [trending, setTrending] = useState<TMDBMovie[]>([]);
+  const [trending, setTrending] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [view, setView] = useView();
 
-  // Load trending on mount
+  // Filter state
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const [selectedKeywords, setSelectedKeywords] = useState<{ id: number; name: string }[]>([]);
+  const [mediaTypeFilter, setMediaTypeFilter] = useState<"all" | "movie" | "tv">("all");
+  const [sortBy, setSortBy] = useState("popularity.desc");
+  const [genres, setGenres] = useState<TMDBGenre[]>([]);
+  const [discoverResults, setDiscoverResults] = useState<MediaItem[]>([]);
+  const [isDiscoverMode, setIsDiscoverMode] = useState(false);
+
+  const activeFilterCount = selectedGenres.length + selectedKeywords.length;
+
+  // Load genres based on media type filter
   useEffect(() => {
-    getTrending("day")
-      .then((data) => setTrending(data.results.slice(0, 20)))
+    const loadGenres = async () => {
+      if (mediaTypeFilter === "tv") {
+        setGenres(await getTvGenres());
+      } else if (mediaTypeFilter === "movie") {
+        setGenres(await getGenres());
+      } else {
+        const [mg, tg] = await Promise.all([getGenres(), getTvGenres()]);
+        const merged = [...mg];
+        for (const g of tg) {
+          if (!merged.find((m) => m.id === g.id)) merged.push(g);
+        }
+        setGenres(merged);
+      }
+    };
+    loadGenres();
+  }, [mediaTypeFilter]);
+
+  // Load trending on mount — merge movies and TV
+  useEffect(() => {
+    Promise.all([getTrending("day"), getTrendingTv("day")])
+      .then(([movies, tv]) => {
+        const merged = [
+          ...movies.results.map(movieToMediaItem),
+          ...tv.results.map(tvToMediaItem),
+        ]
+          .sort((a, b) => b.voteAverage - a.voteAverage)
+          .slice(0, 20);
+        setTrending(merged);
+      })
       .catch(() => {});
   }, []);
+
+  // Discover execution
+  const executeDiscover = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {
+        with_genres: selectedGenres.join(",") || undefined,
+        with_keywords: selectedKeywords.map((k) => k.id).join(",") || undefined,
+        sort_by: sortBy,
+      };
+
+      if (mediaTypeFilter === "movie") {
+        const res = await discoverMovies(params);
+        setDiscoverResults(res.results.map(movieToMediaItem));
+      } else if (mediaTypeFilter === "tv") {
+        const res = await discoverTv(params);
+        setDiscoverResults(res.results.map(tvToMediaItem));
+      } else {
+        const [m, tv] = await Promise.all([discoverMovies(params), discoverTv(params)]);
+        const merged = [
+          ...m.results.map(movieToMediaItem),
+          ...tv.results.map(tvToMediaItem),
+        ].sort((a, b) => b.voteAverage - a.voteAverage);
+        setDiscoverResults(merged);
+      }
+    } catch {
+      setDiscoverResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedGenres, selectedKeywords, sortBy, mediaTypeFilter]);
 
   // Search handler
   const performSearch = useCallback(async (q: string, activeTab: SearchTab) => {
     if (!q.trim()) {
-      setMovieResults([]);
+      setTitleResults([]);
       setPersonResults([]);
       setSearched(false);
       return;
@@ -96,15 +179,21 @@ export default function SearchPage() {
     setLoading(true);
     setSearched(true);
     try {
-      if (activeTab === "movies") {
-        const data = await searchMovies(q);
-        setMovieResults(data.results);
+      if (activeTab === "titles") {
+        const data = await searchMulti(q);
+        const items: MediaItem[] = data.results
+          .filter(
+            (r): r is (TMDBMovie & { media_type: "movie" }) | (TMDBTvShow & { media_type: "tv" }) =>
+              r.media_type === "movie" || r.media_type === "tv"
+          )
+          .map((r) => (r.media_type === "movie" ? movieToMediaItem(r) : tvToMediaItem(r)));
+        setTitleResults(items);
       } else {
         const data = await searchPerson(q);
         setPersonResults(data.results);
       }
     } catch {
-      setMovieResults([]);
+      setTitleResults([]);
       setPersonResults([]);
     } finally {
       setLoading(false);
@@ -119,12 +208,14 @@ export default function SearchPage() {
 
   const handleTabChange = (newTab: SearchTab) => {
     setTab(newTab);
-    setMovieResults([]);
+    setTitleResults([]);
     setPersonResults([]);
-    if (query.trim()) {
-      setSearched(false); // Will trigger new search via effect
-    }
+    setIsDiscoverMode(false);
+    if (query.trim()) setSearched(false);
   };
+
+  // Determine what results to show for titles tab
+  const displayResults = isDiscoverMode ? discoverResults : titleResults;
 
   return (
     <div className="page">
@@ -136,7 +227,7 @@ export default function SearchPage() {
           </div>
           <input
             type="text"
-            placeholder={tab === "movies" ? "Buscar película..." : "Buscar actor o director..."}
+            placeholder={t(tab === "titles" ? "search.placeholder.movies" : "search.placeholder.people")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className={`input ${styles.searchInput}`}
@@ -157,62 +248,121 @@ export default function SearchPage() {
         {/* Tabs */}
         <div className={styles.tabs}>
           <button
-            onClick={() => handleTabChange("movies")}
-            className={`${styles.tab} ${tab === "movies" ? styles.tabActive : ""}`}
-            id="tab-movies"
+            onClick={() => handleTabChange("titles")}
+            className={`${styles.tab} ${tab === "titles" ? styles.tabActive : ""}`}
+            id="tab-titles"
           >
-            <IconFilm /> Películas
+            <IconFilm /> {t("search.titles")}
           </button>
           <button
             onClick={() => handleTabChange("people")}
             className={`${styles.tab} ${tab === "people" ? styles.tabActive : ""}`}
             id="tab-people"
           >
-            <IconUser /> Personas
+            <IconUser /> {t("search.tab.people")}
           </button>
         </div>
 
-        {/* Results header */}
-        {searched && !loading && (
-          <div className={styles.resultsHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)" }}>
-            <h2 className="section-title">
-              {tab === "movies"
-                ? `${movieResults.length} resultado${movieResults.length !== 1 ? "s" : ""}`
-                : `${personResults.length} persona${personResults.length !== 1 ? "s" : ""}`}
-            </h2>
-            {tab === "movies" && <ViewToggle value={view} onChange={setView} />}
+        {/* Filter row — only on titles tab */}
+        {tab === "titles" && (
+          <div className={styles.filterRow}>
+            <button onClick={() => setFilterOpen(true)} className={styles.filterBtn}>
+              ⚙ {t("search.filters")}
+              {activeFilterCount > 0 && (
+                <span className={styles.filterBadge}>{activeFilterCount}</span>
+              )}
+            </button>
+            <ViewToggle value={view} onChange={setView} />
           </div>
         )}
 
-        {/* Trending (only when not searching and on movies tab) */}
-        {!searched && tab === "movies" && trending.length > 0 && (
+        {/* Active filter pills */}
+        {tab === "titles" && (selectedGenres.length > 0 || selectedKeywords.length > 0) && (
+          <div className={styles.activePills}>
+            {selectedGenres.map((gid) => {
+              const genre = genres.find((g) => g.id === gid);
+              return genre ? (
+                <span key={gid} className={styles.activeGenrePill}>
+                  {genre.name}
+                  <button onClick={() => setSelectedGenres((prev) => prev.filter((id) => id !== gid))}>
+                    ✕
+                  </button>
+                </span>
+              ) : null;
+            })}
+            {selectedKeywords.map((kw) => (
+              <span key={kw.id} className={styles.activeKeywordPill}>
+                {kw.name}
+                <button onClick={() => setSelectedKeywords((prev) => prev.filter((k) => k.id !== kw.id))}>
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Results header */}
+        {searched && !loading && !isDiscoverMode && (
+          <div
+            className={styles.resultsHeader}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)" }}
+          >
+            <h2 className="section-title">
+              {tab === "titles"
+                ? `${titleResults.length} resultado${titleResults.length !== 1 ? "s" : ""}`
+                : `${personResults.length} persona${personResults.length !== 1 ? "s" : ""}`}
+            </h2>
+          </div>
+        )}
+
+        {/* Discover mode header */}
+        {isDiscoverMode && !loading && (
+          <div
+            className={styles.resultsHeader}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)" }}
+          >
+            <h2 className="section-title">
+              {t("search.discover")} — {discoverResults.length} resultado{discoverResults.length !== 1 ? "s" : ""}
+            </h2>
+          </div>
+        )}
+
+        {/* Trending (only when not searching, not in discover mode, on titles tab) */}
+        {!searched && !isDiscoverMode && tab === "titles" && trending.length > 0 && (
           <>
-            <div className={styles.resultsHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)" }}>
-              <h2 className="section-title"><IconFlame /> Popular hoy</h2>
-              <ViewToggle value={view} onChange={setView} />
+            <div
+              className={styles.resultsHeader}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)" }}
+            >
+              <h2 className="section-title">
+                <IconFlame /> {t("search.popularToday")}
+              </h2>
             </div>
             {view === "grid" ? (
               <div className="movie-grid">
-                {trending.map((movie) => (
+                {trending.map((item) => (
                   <MovieCard
-                    key={movie.id}
-                    tmdbId={movie.id}
-                    title={movie.title}
-                    posterPath={movie.poster_path}
-                    releaseDate={movie.release_date}
-                    rating={movie.vote_average}
+                    key={`${item.mediaType}-${item.id}`}
+                    tmdbId={item.id}
+                    title={item.displayTitle}
+                    posterPath={item.posterPath}
+                    releaseDate={item.displayDate}
+                    rating={item.voteAverage}
+                    mediaType={item.mediaType}
+                    showBadge={true}
                   />
                 ))}
               </div>
             ) : (
               <div className="movie-list">
-                {trending.map((movie) => (
+                {trending.map((item) => (
                   <MovieListRow
-                    key={movie.id}
-                    tmdbId={movie.id}
-                    title={movie.title}
-                    posterPath={movie.poster_path}
-                    releaseDate={movie.release_date}
+                    key={`${item.mediaType}-${item.id}`}
+                    tmdbId={item.id}
+                    title={item.displayTitle}
+                    posterPath={item.posterPath}
+                    releaseDate={item.displayDate}
+                    mediaType={item.mediaType}
                   />
                 ))}
               </div>
@@ -231,30 +381,33 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* Movie results */}
-        {!loading && searched && tab === "movies" && movieResults.length > 0 && (
+        {/* Title results (search or discover) */}
+        {!loading && (searched || isDiscoverMode) && tab === "titles" && displayResults.length > 0 && (
           view === "grid" ? (
             <div className="movie-grid">
-              {movieResults.map((movie) => (
+              {displayResults.map((item) => (
                 <MovieCard
-                  key={movie.id}
-                  tmdbId={movie.id}
-                  title={movie.title}
-                  posterPath={movie.poster_path}
-                  releaseDate={movie.release_date}
-                  rating={movie.vote_average}
+                  key={`${item.mediaType}-${item.id}`}
+                  tmdbId={item.id}
+                  title={item.displayTitle}
+                  posterPath={item.posterPath}
+                  releaseDate={item.displayDate}
+                  rating={item.voteAverage}
+                  mediaType={item.mediaType}
+                  showBadge={true}
                 />
               ))}
             </div>
           ) : (
             <div className="movie-list">
-              {movieResults.map((movie) => (
+              {displayResults.map((item) => (
                 <MovieListRow
-                  key={movie.id}
-                  tmdbId={movie.id}
-                  title={movie.title}
-                  posterPath={movie.poster_path}
-                  releaseDate={movie.release_date}
+                  key={`${item.mediaType}-${item.id}`}
+                  tmdbId={item.id}
+                  title={item.displayTitle}
+                  posterPath={item.posterPath}
+                  releaseDate={item.displayDate}
+                  mediaType={item.mediaType}
                 />
               ))}
             </div>
@@ -298,16 +451,53 @@ export default function SearchPage() {
         )}
 
         {/* No results */}
-        {!loading && searched && (
-          (tab === "movies" && movieResults.length === 0) ||
-          (tab === "people" && personResults.length === 0)
-        ) && (
+        {!loading &&
+          searched &&
+          !isDiscoverMode &&
+          ((tab === "titles" && titleResults.length === 0) ||
+            (tab === "people" && personResults.length === 0)) && (
           <div className="empty-state">
-            <div className="icon"><IconSearchEmpty /></div>
-            <h3>Sin resultados</h3>
-            <p>No encontramos {tab === "movies" ? "películas" : "personas"} para &quot;{query}&quot;</p>
+            <div className="icon">
+              <IconSearchEmpty />
+            </div>
+            <h3>{t("search.noResults")}</h3>
+            <p>
+              {t("search.noResultsFor", {
+                type: t(tab === "titles" ? "search.movies" : "search.persons"),
+                query,
+              })}
+            </p>
           </div>
         )}
+
+        {/* FilterPanel */}
+        <FilterPanel
+          open={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          genres={genres}
+          selectedGenres={selectedGenres}
+          onGenresChange={setSelectedGenres}
+          keywords={selectedKeywords}
+          onKeywordsChange={setSelectedKeywords}
+          mediaType={mediaTypeFilter}
+          onMediaTypeChange={setMediaTypeFilter}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          onApply={() => {
+            setQuery("");
+            setIsDiscoverMode(true);
+            setSearched(false);
+            executeDiscover();
+          }}
+          onClear={() => {
+            setSelectedGenres([]);
+            setSelectedKeywords([]);
+            setMediaTypeFilter("all");
+            setSortBy("popularity.desc");
+            setIsDiscoverMode(false);
+            setDiscoverResults([]);
+          }}
+        />
       </div>
     </div>
   );
