@@ -12,27 +12,27 @@ const en: Record<string, string> = {
 
   // Home
   "home.myRanking": "My Ranking",
-  "home.moviesRated": "{count} movies rated",
-  "home.startRating": "Start rating movies to see your ranking",
+  "home.moviesRated": "{count} titles rated",
+  "home.startRating": "Start rating titles to see your ranking",
   "home.trending": "Trending this week",
-  "home.myTop": "My Top Movies",
+  "home.myTop": "My Top",
   "home.emptyTitle": "Your ranking is empty",
-  "home.emptyDesc": "Search for movies you've watched, mark them as seen and give them your personal rating.",
+  "home.emptyDesc": "Search for movies or series you've watched, mark them as seen and give them your personal rating.",
   "home.nowPlaying": "Now Playing",
   "home.topRated": "All-Time Best",
   "home.forYou": "For You",
 
   // Search
-  "search.placeholder.movies": "Search movie...",
+  "search.placeholder.movies": "Search title...",
   "search.placeholder.people": "Search actor or director...",
-  "search.tab.movies": "Movies",
+  "search.tab.movies": "Titles",
   "search.tab.people": "People",
   "search.results": "{count} result{s}",
   "search.people": "{count} person{s}",
   "search.popularToday": "Popular today",
   "search.noResults": "No results",
   "search.noResultsFor": "No {type} found for \"{query}\"",
-  "search.movies": "movies",
+  "search.movies": "titles",
   "search.persons": "people",
 
   // Movie Detail
@@ -62,18 +62,18 @@ const en: Record<string, string> = {
   "watchlist.count": "{count} movie{s} in your list",
   "watchlist.empty": "Your watchlist is empty",
   "watchlist.emptyTitle": "Nothing pending",
-  "watchlist.emptyDesc": "Search for movies and mark them as \"Want to Watch\" to add them here.",
+  "watchlist.emptyDesc": "Search for movies or series and mark them as \"Want to Watch\" to add them here.",
 
   // Collections
   "collections.title": "Collections",
-  "collections.subtitle": "Organize your movies by theme",
+  "collections.subtitle": "Organize your titles by theme",
   "collections.new": "New Collection",
   "collections.create": "Create",
   "collections.creating": "Creating...",
   "collections.namePlaceholder": "Collection name",
   "collections.descPlaceholder": "Description (optional)",
   "collections.emptyTitle": "No collections",
-  "collections.emptyDesc": "Create collections to organize movies by director, saga, genre or anything you want.",
+  "collections.emptyDesc": "Create collections to organize movies and series by director, saga, genre or anything you want.",
   "collections.deleteConfirm": "Delete this collection?",
   "collections.type.custom": "Custom",
   "collections.type.saga": "Saga",
@@ -102,7 +102,7 @@ const en: Record<string, string> = {
   "person.asDirectorCount": "as director",
   "person.showMore": "Show more",
   "person.showLess": "Show less",
-  "person.noMovies": "No movies for this filter",
+  "person.noMovies": "No results for this filter",
   "person.exportCollection": "Export as collection",
   "person.exporting": "Exporting...",
   "person.exportSuccess": "Collection created!",
@@ -129,7 +129,7 @@ const en: Record<string, string> = {
   "social.removeFriend": "Remove this friend?",
   "social.watched": "Watched",
   "social.average": "Average",
-  "social.topMovies": "Top Movies",
+  "social.topMovies": "Top Titles",
   "social.collectionInvites": "Collection invitations",
   "social.accept": "Accept",
   "social.decline": "Decline",
@@ -153,7 +153,7 @@ const en: Record<string, string> = {
   // Collection Detail
   "collectionDetail.back": "Collections",
   "collectionDetail.empty": "Empty collection",
-  "collectionDetail.emptyDesc": "Search for movies and add them from the movie detail page.",
+  "collectionDetail.emptyDesc": "Search for titles and add them from the detail page.",
   "collectionDetail.members": "Members",
   "collectionDetail.invite": "Invite friend",
   "collectionDetail.owner": "Owner",
@@ -165,7 +165,7 @@ const en: Record<string, string> = {
   "collectionDetail.saving": "Saving...",
   "collectionDetail.deleting": "Deleting...",
   "collectionDetail.deleteConfirm": "Delete this collection? This action cannot be undone.",
-  "collectionDetail.editMovies": "Edit movies",
+  "collectionDetail.editMovies": "Edit titles",
   "collectionDetail.doneEditing": "Done",
   "collectionDetail.removeMovie": "Remove from collection",
   "collectionDetail.confirmRemove": "Tap again to confirm",
@@ -192,6 +192,45 @@ const en: Record<string, string> = {
   "general.language": "Language",
   "general.spanish": "Spanish",
   "general.english": "English",
+
+  // Filter
+  "filter.all": "All",
+  "filter.movies": "Movies",
+  "filter.series": "Series",
+
+  // Search — filters
+  "search.titles": "Titles",
+  "search.filters": "Filters",
+  "search.clearAll": "Clear all",
+  "search.searchFilters": "Search genre or keyword...",
+  "search.genres": "Genres",
+  "search.keywords": "Keywords",
+  "search.addKeyword": "Add keyword...",
+  "search.sortBy": "Sort by",
+  "search.popularity": "Popularity",
+  "search.sortRating": "Rating",
+  "search.newest": "Newest",
+  "search.titleAZ": "Title A-Z",
+  "search.applyFilters": "Apply filters",
+  "search.discover": "Discover",
+
+  // TV
+  "tv.seasons": "seasons",
+  "tv.episodes": "episodes",
+  "tv.createdBy": "Created by",
+  "tv.network": "Network",
+  "tv.status.returning": "Airing",
+  "tv.status.ended": "Ended",
+  "tv.status.canceled": "Canceled",
+  "tv.status.production": "In Production",
+  "tv.showMore": "show more",
+  "tv.tvCredits": "TV Credits",
+  "tv.synopsis": "Synopsis",
+  "tv.cast": "Cast",
+  "tv.similar": "Similar series",
+
+  // Home — new sections
+  "home.onTheAir": "On the Air",
 };
 
 export default en;

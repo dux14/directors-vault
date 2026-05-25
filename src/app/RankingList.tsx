@@ -8,7 +8,8 @@ import { getPosterUrl } from "@/lib/tmdb";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
 import { swapTierPosition } from "@/lib/actions";
 import { useTranslation } from "@/lib/i18n/context";
-import type { UserMovie } from "@/lib/types";
+import type { UserMovie, MediaType } from "@/lib/types";
+import MediaBadge from "@/components/MediaBadge";
 import styles from "./RankingList.module.css";
 
 interface RankingListProps {
@@ -31,7 +32,14 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
   const { t } = useTranslation();
   const [movies, setMovies] = useState(initialMovies);
   const [reorderMode, setReorderMode] = useState(false);
+  const [mediaFilter, setMediaFilter] = useState<"all" | MediaType>("all");
   const [isPending, startTransition] = useTransition();
+
+  const effectiveReorderMode = reorderMode && mediaFilter === "all";
+
+  const filteredMovies = mediaFilter === "all"
+    ? movies
+    : movies.filter(m => m.media_type === mediaFilter);
 
   const isFirstInTier = (index: number) => {
     if (index === 0) return true;
@@ -65,21 +73,36 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
   return (
     <div>
       <div className={styles.header}>
-        <button
-          onClick={() => setReorderMode(!reorderMode)}
-          className="btn btn-ghost btn-sm"
-        >
-          {reorderMode ? t("ranking.done") : t("ranking.reorder")}
-        </button>
+        <div className={styles.filterToggle}>
+          {(["all", "movie", "tv"] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setMediaFilter(type)}
+              className={`${styles.filterBtn} ${mediaFilter === type ? styles.filterBtnActive : ""}`}
+            >
+              {t(type === "all" ? "filter.all" : type === "movie" ? "filter.movies" : "filter.series")}
+            </button>
+          ))}
+        </div>
+        {mediaFilter === "all" && (
+          <button
+            onClick={() => setReorderMode(!reorderMode)}
+            className="btn btn-ghost btn-sm"
+          >
+            {reorderMode ? t("ranking.done") : t("ranking.reorder")}
+          </button>
+        )}
       </div>
       <div className={styles.list}>
-        {movies.map((movie, index) => {
+        {filteredMovies.map((movie, index) => {
           const rank = index + 1;
           const year = movie.movie_release_date
             ? new Date(movie.movie_release_date).getFullYear()
             : null;
           const grade = ratingToGrade(movie.personal_rating);
           const gradeColor = getRatingColor(movie.personal_rating);
+          // index in the full movies array (needed for reorder boundary checks)
+          const globalIndex = movies.indexOf(movie);
 
           return (
             <motion.div
@@ -89,21 +112,21 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
               transition={{ delay: index * 0.05, duration: 0.3 }}
             >
               <div className={styles.item}>
-                {reorderMode ? (
+                {effectiveReorderMode ? (
                   <>
                     {/* Reorder arrows */}
                     <div className={styles.reorderControls}>
                       <button
-                        onClick={() => handleSwap(index, "up")}
-                        disabled={isFirstInTier(index) || isPending}
+                        onClick={() => handleSwap(globalIndex, "up")}
+                        disabled={isFirstInTier(globalIndex) || isPending}
                         className={styles.arrowBtn}
                         aria-label="Move up"
                       >
                         <IconArrowUp />
                       </button>
                       <button
-                        onClick={() => handleSwap(index, "down")}
-                        disabled={isLastInTier(index) || isPending}
+                        onClick={() => handleSwap(globalIndex, "down")}
+                        disabled={isLastInTier(globalIndex) || isPending}
                         className={styles.arrowBtn}
                         aria-label="Move down"
                       >
@@ -121,12 +144,13 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
                         className={styles.posterImg}
                         unoptimized={!movie.movie_poster_path}
                       />
+                      <MediaBadge type={movie.media_type} />
                     </div>
 
                     {/* Info */}
                     <div className={styles.info}>
                       <h3 className={styles.title}>
-                        {movie.movie_title || `Movie #${movie.tmdb_movie_id}`}
+                        {movie.movie_title || `Item #${movie.tmdb_id}`}
                       </h3>
                       {year && <span className={styles.year}>{year}</span>}
                     </div>
@@ -141,7 +165,7 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
                     )}
                   </>
                 ) : (
-                  <Link href={`/movie/${movie.tmdb_movie_id}`} className={styles.itemLink}>
+                  <Link href={movie.media_type === "tv" ? `/tv/${movie.tmdb_id}` : `/movie/${movie.tmdb_id}`} className={styles.itemLink}>
                     {/* Rank */}
                     <div className={`rank-number ${rank <= 3 ? "top-3" : ""}`}>
                       {rank}
@@ -157,12 +181,13 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
                         className={styles.posterImg}
                         unoptimized={!movie.movie_poster_path}
                       />
+                      <MediaBadge type={movie.media_type} />
                     </div>
 
                     {/* Info */}
                     <div className={styles.info}>
                       <h3 className={styles.title}>
-                        {movie.movie_title || `Movie #${movie.tmdb_movie_id}`}
+                        {movie.movie_title || `Item #${movie.tmdb_id}`}
                       </h3>
                       {year && <span className={styles.year}>{year}</span>}
                     </div>

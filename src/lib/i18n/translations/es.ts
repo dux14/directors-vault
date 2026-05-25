@@ -12,27 +12,27 @@ const es = {
 
   // Home
   "home.myRanking": "Mi Ranking",
-  "home.moviesRated": "{count} películas calificadas",
-  "home.startRating": "Empieza a calificar películas para ver tu ranking",
+  "home.moviesRated": "{count} títulos calificados",
+  "home.startRating": "Empieza a calificar títulos para ver tu ranking",
   "home.trending": "Trending esta semana",
-  "home.myTop": "Mi Top Películas",
+  "home.myTop": "Mi Top",
   "home.emptyTitle": "Tu ranking está vacío",
-  "home.emptyDesc": "Busca películas que hayas visto, márcalas como vistas y dales tu calificación personal.",
+  "home.emptyDesc": "Busca películas o series que hayas visto, márcalas como vistas y dales tu calificación personal.",
   "home.nowPlaying": "Estrenos Recientes",
   "home.topRated": "Mejores de la Historia",
   "home.forYou": "Para Ti",
 
   // Search
-  "search.placeholder.movies": "Buscar película...",
+  "search.placeholder.movies": "Buscar título...",
   "search.placeholder.people": "Buscar actor o director...",
-  "search.tab.movies": "Películas",
+  "search.tab.movies": "Títulos",
   "search.tab.people": "Personas",
   "search.results": "{count} resultado{s}",
   "search.people": "{count} persona{s}",
   "search.popularToday": "Popular hoy",
   "search.noResults": "Sin resultados",
   "search.noResultsFor": "No encontramos {type} para \"{query}\"",
-  "search.movies": "películas",
+  "search.movies": "títulos",
   "search.persons": "personas",
 
   // Movie Detail
@@ -62,18 +62,18 @@ const es = {
   "watchlist.count": "{count} película{s} en tu lista",
   "watchlist.empty": "Tu lista de pendientes está vacía",
   "watchlist.emptyTitle": "Nada pendiente",
-  "watchlist.emptyDesc": "Busca películas y márcalas como \"Quiero Ver\" para agregarlas aquí.",
+  "watchlist.emptyDesc": "Busca películas o series y márcalas como \"Quiero Ver\" para agregarlas aquí.",
 
   // Collections
   "collections.title": "Colecciones",
-  "collections.subtitle": "Organiza tus películas por tema",
+  "collections.subtitle": "Organiza tus títulos por tema",
   "collections.new": "Nueva Colección",
   "collections.create": "Crear",
   "collections.creating": "Creando...",
   "collections.namePlaceholder": "Nombre de la colección",
   "collections.descPlaceholder": "Descripción (opcional)",
   "collections.emptyTitle": "Sin colecciones",
-  "collections.emptyDesc": "Crea colecciones para organizar películas por director, saga, género o lo que quieras.",
+  "collections.emptyDesc": "Crea colecciones para organizar películas y series por director, saga, género o lo que quieras.",
   "collections.deleteConfirm": "¿Eliminar esta colección?",
   "collections.type.custom": "Personalizada",
   "collections.type.saga": "Saga",
@@ -102,7 +102,7 @@ const es = {
   "person.asDirectorCount": "como director",
   "person.showMore": "Ver más",
   "person.showLess": "Ver menos",
-  "person.noMovies": "Sin películas para este filtro",
+  "person.noMovies": "Sin resultados para este filtro",
   "person.exportCollection": "Exportar como colección",
   "person.exporting": "Exportando...",
   "person.exportSuccess": "¡Colección creada!",
@@ -129,7 +129,7 @@ const es = {
   "social.removeFriend": "¿Eliminar esta amistad?",
   "social.watched": "Vistas",
   "social.average": "Promedio",
-  "social.topMovies": "Top Películas",
+  "social.topMovies": "Top Títulos",
   "social.collectionInvites": "Invitaciones a colecciones",
   "social.accept": "Aceptar",
   "social.decline": "Rechazar",
@@ -153,7 +153,7 @@ const es = {
   // Collection Detail
   "collectionDetail.back": "Colecciones",
   "collectionDetail.empty": "Colección vacía",
-  "collectionDetail.emptyDesc": "Busca películas y agrégalas a esta colección desde su página de detalle.",
+  "collectionDetail.emptyDesc": "Busca títulos y agrégalos a esta colección desde su página de detalle.",
   "collectionDetail.members": "Miembros",
   "collectionDetail.invite": "Invitar amigo",
   "collectionDetail.owner": "Dueño",
@@ -165,7 +165,7 @@ const es = {
   "collectionDetail.saving": "Guardando...",
   "collectionDetail.deleting": "Eliminando...",
   "collectionDetail.deleteConfirm": "¿Eliminar esta colección? Esta acción no se puede deshacer.",
-  "collectionDetail.editMovies": "Editar películas",
+  "collectionDetail.editMovies": "Editar títulos",
   "collectionDetail.doneEditing": "Listo",
   "collectionDetail.removeMovie": "Quitar de la colección",
   "collectionDetail.confirmRemove": "Toca de nuevo para confirmar",
@@ -192,6 +192,45 @@ const es = {
   "general.language": "Idioma",
   "general.spanish": "Español",
   "general.english": "Inglés",
+
+  // Filter
+  "filter.all": "Todo",
+  "filter.movies": "Películas",
+  "filter.series": "Series",
+
+  // Search — filters
+  "search.titles": "Títulos",
+  "search.filters": "Filtros",
+  "search.clearAll": "Limpiar todo",
+  "search.searchFilters": "Buscar género o keyword...",
+  "search.genres": "Géneros",
+  "search.keywords": "Keywords",
+  "search.addKeyword": "Agregar keyword...",
+  "search.sortBy": "Ordenar por",
+  "search.popularity": "Popularidad",
+  "search.sortRating": "Rating",
+  "search.newest": "Más reciente",
+  "search.titleAZ": "Título A-Z",
+  "search.applyFilters": "Aplicar filtros",
+  "search.discover": "Descubrir",
+
+  // TV
+  "tv.seasons": "temporadas",
+  "tv.episodes": "episodios",
+  "tv.createdBy": "Creada por",
+  "tv.network": "Cadena",
+  "tv.status.returning": "En emisión",
+  "tv.status.ended": "Finalizada",
+  "tv.status.canceled": "Cancelada",
+  "tv.status.production": "En producción",
+  "tv.showMore": "ver más",
+  "tv.tvCredits": "Créditos TV",
+  "tv.synopsis": "Sinopsis",
+  "tv.cast": "Reparto",
+  "tv.similar": "Series similares",
+
+  // Home — new sections
+  "home.onTheAir": "Al Aire",
 } as const;
 
 export type TranslationKey = keyof typeof es;

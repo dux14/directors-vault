@@ -5,6 +5,8 @@
 
 export type MovieStatus = "watched" | "want_to_watch" | "not_interested";
 
+export type MediaType = "movie" | "tv";
+
 export type CollectionType =
   | "director"
   | "actor"
@@ -15,7 +17,8 @@ export type CollectionType =
 export interface UserMovie {
   id: string;
   user_id: string;
-  tmdb_movie_id: number;
+  tmdb_id: number;
+  media_type: MediaType;
   status: MovieStatus;
   /** Letter grade stored as integer: 8=S, 7=A+, 6=A, 5=B, 4=C, 3=D, 2=E, 1=F */
   personal_rating: number | null;
@@ -47,7 +50,8 @@ export interface Collection {
 export interface CollectionMovie {
   id: string;
   collection_id: string;
-  tmdb_movie_id: number;
+  tmdb_id: number;
+  media_type: MediaType;
   sort_order: number;
   added_at: string;
   // Joined from TMDB (client-side enrichment)

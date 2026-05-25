@@ -1,5 +1,5 @@
 /* ============================================
- * Movie Detail Client Component
+ * TV Series Detail Client Component
  * Interactive UI with actions and rating
  * ============================================ */
 
@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  type TMDBMovieDetail,
+  type TMDBTvDetail,
   getPosterUrl,
   getBackdropUrl,
   getProfileUrl,
@@ -25,12 +25,12 @@ import {
   getUserCollectionsForMovie,
   createCollection,
 } from "@/lib/actions";
-import { ratingToGrade, getRatingColor, getRatingDef } from "@/lib/ratings";
+import { getRatingDef } from "@/lib/ratings";
 import { useTranslation } from "@/lib/i18n/context";
 import type { UserMovie, MovieStatus, Collection } from "@/lib/types";
 import RatingPicker from "@/components/RatingPicker";
 import MovieCard from "@/components/MovieCard";
-import styles from "./movie.module.css";
+import styles from "./tv.module.css";
 
 /* ---- SVG Icon Components ---- */
 const IconCheck = () => (
@@ -93,12 +93,19 @@ const IconEdit = () => (
   </svg>
 );
 
+const TV_STATUS_MAP: Record<string, { key: string; variant: string }> = {
+  "Returning Series": { key: "tv.status.returning", variant: "returning" },
+  "Ended": { key: "tv.status.ended", variant: "ended" },
+  "Canceled": { key: "tv.status.canceled", variant: "canceled" },
+  "In Production": { key: "tv.status.production", variant: "production" },
+};
+
 interface Props {
-  movie: TMDBMovieDetail;
+  tvShow: TMDBTvDetail;
   userMovie: UserMovie | null;
 }
 
-export default function MovieDetailClient({ movie, userMovie }: Props) {
+export default function TvDetailClient({ tvShow, userMovie }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { t, tmdbLocale } = useTranslation();
@@ -120,33 +127,37 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const [isCreating, setIsCreating] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
   const [creatingCollection, setCreatingCollection] = useState(false);
+  const [showAllSeasons, setShowAllSeasons] = useState(false);
 
-  const director = movie.credits?.crew.find((c) => c.job === "Director");
-  const cast = movie.credits?.cast.slice(0, 8) || [];
-  const year = movie.release_date
-    ? new Date(movie.release_date).getFullYear()
+  const cast = tvShow.credits?.cast.slice(0, 8) || [];
+  const year = tvShow.first_air_date
+    ? new Date(tvShow.first_air_date).getFullYear()
     : null;
-  const runtime = movie.runtime
-    ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
-    : null;
-  const trailer = movie.videos?.results.find(
+  const seasonsInfo = `${tvShow.number_of_seasons} ${t("tv.seasons")} · ${tvShow.number_of_episodes} ${t("tv.episodes")}`;
+  const trailer = tvShow.videos?.results.find(
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
   const countryCode = tmdbLocale.split("-")[1]?.toUpperCase() || "US";
-  const watchProviders = movie["watch/providers"]?.results[countryCode];
+  const watchProviders = tvShow["watch/providers"]?.results[countryCode];
   const streamingProviders = watchProviders?.flatrate || watchProviders?.rent || watchProviders?.buy || [];
+
+  const tvStatusInfo = TV_STATUS_MAP[tvShow.status];
+
+  // Filter out specials season (season_number 0) for display
+  const regularSeasons = tvShow.seasons?.filter((s) => s.season_number > 0) || [];
+  const visibleSeasons = showAllSeasons ? regularSeasons : regularSeasons.slice(0, 3);
 
   const handleStatusChange = async (status: MovieStatus) => {
     setSaving(true);
     try {
       await setMovieStatus(
-        movie.id,
-        "movie",
+        tvShow.id,
+        "tv",
         status,
-        movie.title,
-        movie.poster_path,
-        movie.release_date,
-        movie.overview
+        tvShow.name,
+        tvShow.poster_path,
+        tvShow.first_air_date,
+        tvShow.overview
       );
       setCurrentStatus(status);
       if (status === "watched") {
@@ -163,7 +174,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     if (currentRating === null) return;
     setSaving(true);
     try {
-      await rateMovie(movie.id, "movie", currentRating);
+      await rateMovie(tvShow.id, "tv", currentRating);
       setShowRating(false);
       startTransition(() => router.refresh());
     } catch (error) {
@@ -175,14 +186,14 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const handleRemove = async () => {
     setSaving(true);
     try {
-      await removeUserMovie(movie.id, "movie");
+      await removeUserMovie(tvShow.id, "tv");
       setCurrentStatus(null);
       setCurrentRating(null);
       setWatchCount(0);
       setShowRating(false);
       startTransition(() => router.refresh());
     } catch (error) {
-      console.error("Error removing movie:", error);
+      console.error("Error removing TV show:", error);
     }
     setSaving(false);
   };
@@ -191,10 +202,10 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     const newCount = Math.max(0, watchCount + delta);
     setWatchCount(newCount);
     try {
-      await updateWatchCount(movie.id, "movie", newCount);
+      await updateWatchCount(tvShow.id, "tv", newCount);
     } catch (error) {
       console.error("Error updating watch count:", error);
-      setWatchCount(watchCount); // Revert on error
+      setWatchCount(watchCount);
     }
   };
 
@@ -204,7 +215,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     setLoadingCollections(true);
     setShowCollections(true);
     try {
-      const data = await getUserCollectionsForMovie(movie.id, "movie");
+      const data = await getUserCollectionsForMovie(tvShow.id, "tv");
       setCollections(data);
     } catch (err) {
       console.error("Error loading collections:", err);
@@ -214,7 +225,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
 
   const handleAddToCollection = async (collectionId: string) => {
     try {
-      await addMovieToCollection(collectionId, movie.id, "movie", movie.title, movie.poster_path);
+      await addMovieToCollection(collectionId, tvShow.id, "tv", tvShow.name, tvShow.poster_path);
       setCollections((prev) =>
         prev.map((c) => c.id === collectionId ? { ...c, hasMovie: true } : c)
       );
@@ -228,7 +239,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     setCreatingCollection(true);
     try {
       const newCol = await createCollection(newCollectionName.trim(), "custom");
-      await addMovieToCollection(newCol.id, movie.id, "movie", movie.title, movie.poster_path);
+      await addMovieToCollection(newCol.id, tvShow.id, "tv", tvShow.name, tvShow.poster_path);
       setCollections((prev) => [...prev, { ...newCol, hasMovie: true }]);
       setShowCollections(false);
       setNewCollectionName("");
@@ -239,17 +250,19 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     setCreatingCollection(false);
   };
 
+  void isPending;
+
   return (
     <div className={styles.page}>
       {/* Backdrop */}
       <div className={styles.backdrop}>
         <Image
-          src={getBackdropUrl(movie.backdrop_path)}
+          src={getBackdropUrl(tvShow.backdrop_path)}
           alt=""
           fill
           priority
           className={styles.backdropImg}
-          unoptimized={!movie.backdrop_path}
+          unoptimized={!tvShow.backdrop_path}
         />
         <div className={styles.backdropGradient} />
       </div>
@@ -284,13 +297,13 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
             transition={{ duration: 0.5 }}
           >
             <Image
-              src={getPosterUrl(movie.poster_path, "large")}
-              alt={movie.title}
+              src={getPosterUrl(tvShow.poster_path, "large")}
+              alt={tvShow.name}
               width={200}
               height={300}
               className={styles.poster}
               priority
-              unoptimized={!movie.poster_path}
+              unoptimized={!tvShow.poster_path}
             />
           </motion.div>
 
@@ -300,16 +313,23 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <h1 className={styles.title}>{movie.title}</h1>
-            {movie.tagline && (
-              <p className={styles.tagline}>&quot;{movie.tagline}&quot;</p>
+            <h1 className={styles.title}>{tvShow.name}</h1>
+            {tvShow.tagline && (
+              <p className={styles.tagline}>&quot;{tvShow.tagline}&quot;</p>
             )}
             <div className={styles.meta}>
               {year && <span>{year}</span>}
-              {runtime && <span>{runtime}</span>}
-              {movie.vote_average > 0 && (
+              <span>{seasonsInfo}</span>
+              {tvShow.vote_average > 0 && (
                 <span className={styles.tmdbRating}>
-                  <IconStar /> {movie.vote_average.toFixed(1)}
+                  <IconStar /> {tvShow.vote_average.toFixed(1)}
+                </span>
+              )}
+              {tvStatusInfo && (
+                <span
+                  className={`${styles.statusBadge} ${styles[tvStatusInfo.variant]}`}
+                >
+                  {t(tvStatusInfo.key)}
                 </span>
               )}
               {trailer && (
@@ -327,7 +347,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               )}
             </div>
             <div className={styles.genres}>
-              {movie.genres.map((genre) => (
+              {tvShow.genres.map((genre) => (
                 <span key={genre.id} className="tag">
                   {genre.name}
                 </span>
@@ -483,11 +503,11 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => {
-              setShowCollections(false);
-              setCollectionSearch("");
-              setIsCreating(false);
-              setNewCollectionName("");
-            }}
+                setShowCollections(false);
+                setCollectionSearch("");
+                setIsCreating(false);
+                setNewCollectionName("");
+              }}
             >
               <motion.div
                 className="modal-content"
@@ -624,7 +644,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                     marginBottom: "1rem",
                   }}
                 >
-                  {movie.title}
+                  {tvShow.name}
                 </p>
                 <RatingPicker
                   value={currentRating}
@@ -653,8 +673,8 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
 
         {/* Overview */}
         <section className={styles.section}>
-          <h2 className="section-title">{t("movie.synopsis")}</h2>
-          <p className={styles.overview}>{movie.overview || t("movie.noSynopsis")}</p>
+          <h2 className="section-title">{t("tv.synopsis")}</h2>
+          <p className={styles.overview}>{tvShow.overview || t("movie.noSynopsis")}</p>
         </section>
 
         {/* Streaming Providers */}
@@ -684,30 +704,99 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
           </section>
         )}
 
-        {/* Director */}
-        {director && (
+        {/* Created By */}
+        {tvShow.created_by.length > 0 && (
           <section className={styles.section}>
-            <h2 className="section-title">{t("movie.director")}</h2>
-            <Link href={`/person/${director.id}`} className={styles.personChip}>
-              <div className={styles.personAvatar}>
-                <Image
-                  src={getProfileUrl(director.profile_path, "small")}
-                  alt={director.name}
-                  width={40}
-                  height={40}
-                  className={styles.personImg}
-                  unoptimized={!director.profile_path}
-                />
-              </div>
-              <span>{director.name}</span>
-            </Link>
+            <h2 className="section-title">{t("tv.createdBy")}</h2>
+            <div className={styles.creatorsRow}>
+              {tvShow.created_by.map((creator) => (
+                <Link
+                  key={creator.id}
+                  href={`/person/${creator.id}`}
+                  className={styles.creatorCard}
+                >
+                  <div className={styles.personAvatar}>
+                    <Image
+                      src={getProfileUrl(creator.profile_path, "small")}
+                      alt={creator.name}
+                      width={40}
+                      height={40}
+                      className={styles.personImg}
+                      unoptimized={!creator.profile_path}
+                    />
+                  </div>
+                  <span>{creator.name}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Networks */}
+        {tvShow.networks.length > 0 && (
+          <section className={styles.section}>
+            <h2 className="section-title">{t("tv.network")}</h2>
+            <div className={styles.networksRow}>
+              {tvShow.networks.map((network) => (
+                <span key={network.id} className={styles.networkChip}>
+                  {network.logo_path ? (
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w92${network.logo_path}`}
+                      alt={network.name}
+                      width={48}
+                      height={24}
+                      className={styles.networkLogo}
+                      unoptimized={false}
+                    />
+                  ) : (
+                    network.name
+                  )}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Seasons */}
+        {regularSeasons.length > 0 && (
+          <section className={styles.section}>
+            <h2 className="section-title">
+              {t("tv.seasons")} ({regularSeasons.length})
+            </h2>
+            <div className={styles.seasonsList}>
+              {visibleSeasons.map((season) => (
+                <div key={season.id} className={styles.seasonItem}>
+                  <div className={styles.seasonInfo}>
+                    <span className={styles.seasonName}>{season.name}</span>
+                    {season.air_date && (
+                      <span className={styles.seasonMeta}>
+                        {new Date(season.air_date).getFullYear()}
+                      </span>
+                    )}
+                  </div>
+                  <span className={styles.seasonEpisodes}>
+                    {season.episode_count} {t("tv.episodes")}
+                  </span>
+                </div>
+              ))}
+              {regularSeasons.length > 3 && (
+                <button
+                  onClick={() => setShowAllSeasons((prev) => !prev)}
+                  className="btn btn-ghost btn-sm"
+                >
+                  {showAllSeasons
+                    ? "ver menos"
+                    : `${t("tv.showMore")} (${regularSeasons.length - 3})`}
+                </button>
+              )}
+            </div>
           </section>
         )}
 
         {/* Cast */}
         {cast.length > 0 && (
           <section className={styles.section}>
-            <h2 className="section-title">{t("movie.cast")}</h2>
+            <h2 className="section-title">{t("tv.cast")}</h2>
             <div className="scroll-row">
               {cast.map((actor) => (
                 <Link key={actor.id} href={`/person/${actor.id}`} className={styles.castCard}>
@@ -728,27 +817,6 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
             </div>
           </section>
         )}
-
-        {/* Similar Movies */}
-        {movie.recommendations?.results &&
-          movie.recommendations.results.length > 0 && (
-            <section className={styles.section}>
-              <h2 className="section-title">{t("movie.recommended")}</h2>
-              <div className="scroll-row">
-                {movie.recommendations.results.slice(0, 10).map((rec) => (
-                  <div key={rec.id} style={{ width: 130 }}>
-                    <MovieCard
-                      tmdbId={rec.id}
-                      title={rec.title}
-                      posterPath={rec.poster_path}
-                      releaseDate={rec.release_date}
-                      size="small"
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
       </div>
     </div>
   );

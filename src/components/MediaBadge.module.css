@@ -1,0 +1,22 @@
+.badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.movie {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.tv {
+  background: #7b68ee;
+  color: #fff;
+}

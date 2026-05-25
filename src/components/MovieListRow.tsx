@@ -9,7 +9,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { getPosterUrl } from "@/lib/tmdb";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
-import type { MovieStatus } from "@/lib/types";
+import type { MediaType, MovieStatus } from "@/lib/types";
+import MediaBadge from "./MediaBadge";
 import styles from "./MovieListRow.module.css";
 
 const IconCheck = () => (
@@ -26,6 +27,8 @@ interface Props {
   userRating?: number | null;
   status?: MovieStatus | null;
   watched?: boolean;
+  mediaType?: MediaType;
+  showBadge?: boolean;
 }
 
 export default function MovieListRow({
@@ -36,13 +39,15 @@ export default function MovieListRow({
   userRating,
   status,
   watched = false,
+  mediaType = "movie",
+  showBadge = false,
 }: Props) {
   const year = releaseDate ? new Date(releaseDate).getFullYear() : null;
   const grade = userRating ? ratingToGrade(userRating) : null;
   const gradeColor = userRating ? getRatingColor(userRating) : undefined;
 
   return (
-    <Link href={`/movie/${tmdbId}`} className={styles.item}>
+    <Link href={mediaType === "tv" ? `/tv/${tmdbId}` : `/movie/${tmdbId}`} className={styles.item}>
       <div className={styles.poster}>
         <Image
           src={getPosterUrl(posterPath, "small")}
@@ -58,6 +63,7 @@ export default function MovieListRow({
             <IconCheck />
           </div>
         )}
+        {showBadge && <MediaBadge type={mediaType} />}
       </div>
 
       <div className={styles.info}>

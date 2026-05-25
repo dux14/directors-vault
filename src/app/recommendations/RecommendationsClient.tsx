@@ -7,7 +7,7 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n/context";
 import MovieCard from "@/components/MovieCard";
-import type { TMDBMovie } from "@/lib/tmdb";
+import type { MediaItem } from "@/lib/tmdb";
 import styles from "./recommendations.module.css";
 
 /* ---- SVG Icons ---- */
@@ -28,7 +28,7 @@ const IconStar = () => (
 );
 
 interface Props {
-  recommendations: TMDBMovie[];
+  recommendations: MediaItem[];
   hasRatedMovies: boolean;
 }
 
@@ -61,17 +61,19 @@ export default function RecommendationsClient({
           >
             {recommendations.map((movie, index) => (
               <motion.div
-                key={movie.id}
+                key={`${movie.id}-${movie.mediaType}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03, duration: 0.3 }}
               >
                 <MovieCard
                   tmdbId={movie.id}
-                  title={movie.title}
-                  posterPath={movie.poster_path}
-                  releaseDate={movie.release_date}
-                  rating={movie.vote_average}
+                  title={movie.displayTitle}
+                  posterPath={movie.posterPath}
+                  releaseDate={movie.displayDate}
+                  rating={movie.voteAverage}
+                  mediaType={movie.mediaType}
+                  showBadge={true}
                 />
               </motion.div>
             ))}

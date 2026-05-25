@@ -13,6 +13,7 @@ import {
   type TMDBPerson,
   type TMDBPersonCredits,
   type TMDBMovie,
+  type TMDBTvShow,
   getProfileUrl,
 } from "@/lib/tmdb";
 import { createCollectionWithMovies } from "@/lib/actions";
@@ -49,9 +50,10 @@ type FilterType = "all" | "cast" | "directing";
 interface Props {
   person: TMDBPerson;
   credits: TMDBPersonCredits;
+  tvCredits: { id: number; cast: (TMDBTvShow & { character: string })[]; crew: (TMDBTvShow & { job: string; department: string })[] };
 }
 
-export default function PersonDetailClient({ person, credits }: Props) {
+export default function PersonDetailClient({ person, credits, tvCredits }: Props) {
   const router = useRouter();
   const { t, locale } = useTranslation();
   const [filter, setFilter] = useState<FilterType>("all");
@@ -89,6 +91,30 @@ export default function PersonDetailClient({ person, credits }: Props) {
   const directorCount = credits.crew.filter((c) => c.job === "Director").length;
   const actorCount = credits.cast.length;
 
+  // Deduplicate TV credits by ID, combine cast + crew, sort by popularity
+  const getFilteredTvShows = (): (TMDBTvShow & { character?: string; job?: string })[] => {
+    const seen = new Set<number>();
+    const shows: (TMDBTvShow & { character?: string; job?: string })[] = [];
+
+    for (const show of tvCredits.cast) {
+      if (!seen.has(show.id) && show.poster_path) {
+        seen.add(show.id);
+        shows.push({ ...show });
+      }
+    }
+
+    for (const show of tvCredits.crew) {
+      if (!seen.has(show.id) && show.poster_path) {
+        seen.add(show.id);
+        shows.push({ ...show });
+      }
+    }
+
+    return shows.sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+  };
+
+  const filteredTvShows = getFilteredTvShows();
+
   const bioPreview = person.biography && person.biography.length > 300
     ? person.biography.slice(0, 300) + "..."
     : person.biography;
@@ -100,7 +126,8 @@ export default function PersonDetailClient({ person, credits }: Props) {
     try {
       const collectionType = filter === "directing" ? "director" : filter === "cast" ? "actor" : (directorCount > 0 ? "director" : "actor");
       const moviesToExport = filteredMovies.map((m) => ({
-        tmdb_movie_id: m.id,
+        tmdb_id: m.id,
+        media_type: "movie" as const,
         movie_title: m.title,
         movie_poster_path: m.poster_path,
       }));
@@ -256,6 +283,28 @@ export default function PersonDetailClient({ person, credits }: Props) {
             </div>
           )}
         </section>
+
+        {/* TV Credits */}
+        {filteredTvShows.length > 0 && (
+          <section className={styles.section}>
+            <h2 className="section-title">{t("tv.tvCredits")}</h2>
+            <div className="movie-grid">
+              {filteredTvShows.map((show) => (
+                <MovieCard
+                  key={show.id}
+                  tmdbId={show.id}
+                  title={show.name}
+                  posterPath={show.poster_path}
+                  releaseDate={show.first_air_date}
+                  rating={show.vote_average}
+                  mediaType="tv"
+                  showBadge={true}
+                  size="medium"
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

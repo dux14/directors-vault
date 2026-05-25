@@ -1,74 +1,61 @@
-/* ============================================
- * Recommendation Engine
- * Combines TMDB recommendations from user's top-rated movies
- * ============================================ */
+import {
+  getMovieRecommendations,
+  getTvRecommendations,
+  movieToMediaItem,
+  tvToMediaItem,
+  type MediaItem,
+} from "@/lib/tmdb";
 
-import { getMovieRecommendations, type TMDBMovie } from "@/lib/tmdb";
-
-interface ScoredMovie extends TMDBMovie {
+interface ScoredMediaItem extends MediaItem {
   score: number;
 }
 
-/**
- * Get recommendations based on a user's highest-rated movies.
- * Calls /movie/{id}/recommendations for each source movie,
- * combines results, deduplicates, and scores by frequency.
- */
 export async function getRecommendationsForUser(
   ratedMovieIds: number[],
-  watchedMovieIds: Set<number>,
+  ratedTvIds: number[],
+  watchedIds: Set<string>,
   locale?: string,
   maxSources: number = 5
-): Promise<TMDBMovie[]> {
-  if (ratedMovieIds.length === 0) return [];
+): Promise<MediaItem[]> {
+  if (ratedMovieIds.length === 0 && ratedTvIds.length === 0) return [];
 
-  // Take up to maxSources best-rated movies
-  const sourceIds = ratedMovieIds.slice(0, maxSources);
+  const movieSources = ratedMovieIds.slice(0, maxSources);
+  const tvSources = ratedTvIds.slice(0, maxSources);
 
-  // Fetch recommendations for each source in parallel
-  const allRecs = await Promise.all(
-    sourceIds.map((id) =>
+  const allRecs = await Promise.all([
+    ...movieSources.map((id) =>
       getMovieRecommendations(id, locale)
-        .then((res) => res.results)
-        .catch(() => [] as TMDBMovie[])
-    )
-  );
+        .then((res) => res.results.map(movieToMediaItem))
+        .catch(() => [] as MediaItem[])
+    ),
+    ...tvSources.map((id) =>
+      getTvRecommendations(id, locale)
+        .then((res) => res.results.map(tvToMediaItem))
+        .catch(() => [] as MediaItem[])
+    ),
+  ]);
 
-  // Score movies by how many times they appear (frequency scoring)
-  const scoreMap = new Map<number, ScoredMovie>();
+  const scoreMap = new Map<string, ScoredMediaItem>();
 
   for (const recs of allRecs) {
-    for (const movie of recs) {
-      // Skip movies the user has already watched or has in their list
-      if (watchedMovieIds.has(movie.id)) continue;
-      // Skip movies without posters
-      if (!movie.poster_path) continue;
+    for (const item of recs) {
+      const key = `${item.id}-${item.mediaType}`;
+      if (watchedIds.has(key)) continue;
+      if (!item.posterPath) continue;
 
-      const existing = scoreMap.get(movie.id);
+      const existing = scoreMap.get(key);
       if (existing) {
-        existing.score += 1 + (movie.vote_average / 10);
+        existing.score += 1 + (item.voteAverage / 10);
       } else {
-        scoreMap.set(movie.id, {
-          ...movie,
-          score: 1 + (movie.vote_average / 10),
+        scoreMap.set(key, {
+          ...item,
+          score: 1 + (item.voteAverage / 10),
         });
       }
     }
   }
 
-  // Sort by score (highest first), then by popularity
   return Array.from(scoreMap.values())
-    .sort((a, b) => b.score - a.score || b.popularity - a.popularity)
+    .sort((a, b) => b.score - a.score)
     .slice(0, 20);
-}
-
-/**
- * Get recommendations from a manual selection of movies.
- */
-export async function getRecommendationsFromSelection(
-  movieIds: number[],
-  watchedMovieIds: Set<number>,
-  locale?: string
-): Promise<TMDBMovie[]> {
-  return getRecommendationsForUser(movieIds, watchedMovieIds, locale, movieIds.length);
 }

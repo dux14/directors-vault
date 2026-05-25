@@ -233,19 +233,19 @@ export async function getCollectionMemberRatings(
   // Get collection movie IDs
   const { data: collMovies } = await supabase
     .from("collection_movies")
-    .select("tmdb_movie_id")
+    .select("tmdb_id")
     .eq("collection_id", collectionId);
 
   if (!collMovies || collMovies.length === 0) return {};
 
-  const movieIds = collMovies.map((m) => m.tmdb_movie_id);
+  const movieIds = collMovies.map((m) => m.tmdb_id);
   const userIdArray = Array.from(allUserIds);
 
   // Get all user_movies for these movies + these users
   const { data: userMovies } = await supabase
     .from("user_movies")
-    .select("tmdb_movie_id, user_id, personal_rating")
-    .in("tmdb_movie_id", movieIds)
+    .select("tmdb_id, user_id, personal_rating")
+    .in("tmdb_id", movieIds)
     .in("user_id", userIdArray);
 
   // Get profiles for all users
@@ -267,7 +267,7 @@ export async function getCollectionMemberRatings(
   for (const movieId of movieIds) {
     result[movieId] = userIdArray.map((uid) => {
       const userMovie = (userMovies || []).find(
-        (um) => um.tmdb_movie_id === movieId && um.user_id === uid
+        (um) => um.tmdb_id === movieId && um.user_id === uid
       );
       return {
         user_id: uid,
