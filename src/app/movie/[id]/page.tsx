@@ -34,7 +34,7 @@ export default async function MovieDetailPage({ params }: Props) {
 
   const [movie, userMovie] = await Promise.all([
     getMovieDetail(movieId, locale),
-    getUserMovieByTmdbId(movieId).catch(() => null),
+    getUserMovieByTmdbId(movieId, "movie").catch(() => null),
   ]);
 
   return <MovieDetailClient movie={movie} userMovie={userMovie} />;

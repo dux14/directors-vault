@@ -141,6 +141,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     try {
       await setMovieStatus(
         movie.id,
+        "movie",
         status,
         movie.title,
         movie.poster_path,
@@ -162,7 +163,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     if (currentRating === null) return;
     setSaving(true);
     try {
-      await rateMovie(movie.id, currentRating);
+      await rateMovie(movie.id, "movie", currentRating);
       setShowRating(false);
       startTransition(() => router.refresh());
     } catch (error) {
@@ -174,7 +175,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const handleRemove = async () => {
     setSaving(true);
     try {
-      await removeUserMovie(movie.id);
+      await removeUserMovie(movie.id, "movie");
       setCurrentStatus(null);
       setCurrentRating(null);
       setWatchCount(0);
@@ -190,7 +191,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     const newCount = Math.max(0, watchCount + delta);
     setWatchCount(newCount);
     try {
-      await updateWatchCount(movie.id, newCount);
+      await updateWatchCount(movie.id, "movie", newCount);
     } catch (error) {
       console.error("Error updating watch count:", error);
       setWatchCount(watchCount); // Revert on error
@@ -203,7 +204,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     setLoadingCollections(true);
     setShowCollections(true);
     try {
-      const data = await getUserCollectionsForMovie(movie.id);
+      const data = await getUserCollectionsForMovie(movie.id, "movie");
       setCollections(data);
     } catch (err) {
       console.error("Error loading collections:", err);
@@ -213,7 +214,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
 
   const handleAddToCollection = async (collectionId: string) => {
     try {
-      await addMovieToCollection(collectionId, movie.id, movie.title, movie.poster_path);
+      await addMovieToCollection(collectionId, movie.id, "movie", movie.title, movie.poster_path);
       setCollections((prev) =>
         prev.map((c) => c.id === collectionId ? { ...c, hasMovie: true } : c)
       );
@@ -227,7 +228,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     setCreatingCollection(true);
     try {
       const newCol = await createCollection(newCollectionName.trim(), "custom");
-      await addMovieToCollection(newCol.id, movie.id, movie.title, movie.poster_path);
+      await addMovieToCollection(newCol.id, movie.id, "movie", movie.title, movie.poster_path);
       setCollections((prev) => [...prev, { ...newCol, hasMovie: true }]);
       setShowCollections(false);
       setNewCollectionName("");
