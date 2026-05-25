@@ -222,6 +222,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     try {
       const newCol = await createCollection(newCollectionName.trim(), "custom");
       await addMovieToCollection(newCol.id, movie.id, movie.title, movie.poster_path);
+      setCollections((prev) => [...prev, { ...newCol, hasMovie: true }]);
       setShowCollections(false);
       setNewCollectionName("");
       setIsCreating(false);
@@ -542,7 +543,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                 {loadingCollections ? (
                   <p style={{ textAlign: "center", opacity: 0.6 }}>...</p>
                 ) : (
-                  <div style={{ maxHeight: "50vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
                     {collections
                       .filter((col) => col.name.toLowerCase().includes(collectionSearch.toLowerCase()))
                       .map((col) => (
