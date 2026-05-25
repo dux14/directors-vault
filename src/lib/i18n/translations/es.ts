@@ -149,6 +149,8 @@ const es = {
   "movie.whereToWatch": "Dónde ver",
   "movie.streamOn": "Disponible en streaming",
   "movie.rentOrBuy": "Alquilar o comprar",
+  "movie.viewOnTmdb": "Ver en TMDB",
+  "movie.notAvailableRegion": "No disponible en tu región",
 
   // Collection Detail
   "collectionDetail.back": "Colecciones",
@@ -231,6 +233,19 @@ const es = {
 
   // Home — new sections
   "home.onTheAir": "Al Aire",
+
+  // Media
+  "media.upcoming": "Próximamente",
+
+  // Recommendations
+  "recommendations.showMore": "Ver más",
+  "recommendations.subtitle": "{count} títulos recomendados",
+  "recommendations.rateMore": "Califica más títulos para mejorar las recomendaciones",
+  "recommendations.startRating": "Califica títulos para obtener recomendaciones personalizadas",
+  "recommendations.emptyTitle": "Sin recomendaciones aún",
+  "recommendations.emptyDesc": "Intenta calificar más títulos con nota B o mejor para que podamos recomendarte.",
+  "recommendations.emptyNoRatings": "Califica tus títulos",
+  "recommendations.emptyNoRatingsDesc": "Busca títulos que hayas visto, márcalas como vistas y califícalas. Usaremos tus favoritas para recomendarte nuevos títulos.",
 } as const;
 
 export type TranslationKey = keyof typeof es;

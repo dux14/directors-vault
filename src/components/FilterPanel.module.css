@@ -158,6 +158,12 @@
   cursor: pointer;
   font-size: 11px;
   padding: 0;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: -10px -6px -10px 0;
 }
 
 .addKeywordBtn {

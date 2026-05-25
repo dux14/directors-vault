@@ -60,3 +60,37 @@
   color: var(--accent-primary);
   box-shadow: var(--shadow-sm);
 }
+
+.settingsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.fullGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.countrySelect {
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.countrySelect:hover,
+.countrySelect:focus {
+  background: var(--bg-elevated);
+  border-color: var(--border-accent);
+  color: var(--accent-primary);
+  outline: none;
+}

@@ -90,40 +90,54 @@ export async function searchUserByEmail(
 export async function searchUserByFriendCode(
   code: string
 ): Promise<UserPublicProfile | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const trimmed = code.trim().toLowerCase();
-  if (trimmed.length < 4) return null; // Too short to search
+    const trimmed = code.trim().toLowerCase();
+    if (trimmed.length < 4) return null; // Too short to search
 
-  // Try exact match first, then prefix match
-  const { data, error } = await supabase
-    .from("user_profiles")
-    .select("*")
-    .ilike("friend_code", `${trimmed}%`)
-    .neq("id", user.id)
-    .maybeSingle();
+    // Prefix match may return multiple rows — use .limit(1) instead of .maybeSingle()
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .ilike("friend_code", `${trimmed}%`)
+      .neq("id", user.id)
+      .limit(1);
 
-  if (error) {
-    console.error("searchUserByFriendCode error:", error.message);
+    if (error) {
+      console.error("searchUserByFriendCode error:", error.message);
+      return null;
+    }
+    return (data && data.length > 0 ? data[0] : null) as UserPublicProfile | null;
+  } catch (err) {
+    console.error("searchUserByFriendCode unexpected error:", err);
     return null;
   }
-  return data as UserPublicProfile | null;
 }
 
 /** Get a user's public profile by ID */
 export async function getProfileById(
   profileId: string
 ): Promise<UserPublicProfile | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("user_profiles")
-    .select("*")
-    .eq("id", profileId)
-    .single();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("id", profileId)
+      .single();
 
-  return data as UserPublicProfile | null;
+    if (error) {
+      console.error("getProfileById error:", error.message);
+      return null;
+    }
+    return data as UserPublicProfile | null;
+  } catch (err) {
+    console.error("getProfileById unexpected error:", err);
+    return null;
+  }
 }
 
 // ---- Friendships ----

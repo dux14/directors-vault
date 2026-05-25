@@ -12,6 +12,17 @@ import { getServerTmdbLocale } from "@/lib/i18n/server";
 import { getRecommendationsForUser } from "@/lib/recommender";
 import HomeClient from "./HomeClient";
 
+/** Interleave two arrays so both types appear alternately */
+function interleave<T>(a: T[], b: T[]): T[] {
+  const result: T[] = [];
+  const maxLen = Math.max(a.length, b.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (i < a.length) result.push(a[i]);
+    if (i < b.length) result.push(b[i]);
+  }
+  return result;
+}
+
 export default async function HomePage() {
   const locale = await getServerTmdbLocale();
   const randomPage = Math.floor(Math.random() * 10) + 1;
@@ -49,15 +60,15 @@ export default async function HomePage() {
     ...trendingTv.results.map(tvToMediaItem),
   ].sort((a, b) => b.voteAverage - a.voteAverage);
 
-  const nowPlayingItems = [
-    ...nowPlaying.results.map(movieToMediaItem),
-    ...tvOnTheAir.results.map(tvToMediaItem),
-  ];
+  const nowPlayingMovieItems = nowPlaying.results.map(movieToMediaItem);
+  const nowPlayingTvItems = tvOnTheAir.results.map(tvToMediaItem);
+  const nowPlayingItems = interleave(nowPlayingMovieItems, nowPlayingTvItems);
 
-  const topRatedItems = [
-    ...topRatedMovies.results.map(movieToMediaItem),
-    ...topRatedTv.results.map(tvToMediaItem),
-  ].sort((a, b) => b.voteAverage - a.voteAverage);
+  const topRatedMovieItems = topRatedMovies.results.map(movieToMediaItem)
+    .sort((a, b) => b.voteAverage - a.voteAverage);
+  const topRatedTvItems = topRatedTv.results.map(tvToMediaItem)
+    .sort((a, b) => b.voteAverage - a.voteAverage);
+  const topRatedItems = interleave(topRatedMovieItems, topRatedTvItems);
 
   return (
     <HomeClient

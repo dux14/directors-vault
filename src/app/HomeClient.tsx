@@ -5,6 +5,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/context";
 import RankingList from "./RankingList";
 import MovieRow from "@/components/MovieRow";
@@ -126,7 +127,9 @@ export default function HomeClient({
         {filterItems(recommendations).length > 0 && (
           <section className="section">
             <div className="section-header">
-              <h2 className="section-title"><IconSparkles /> {t("home.forYou")}</h2>
+              <Link href="/recommendations" className={styles.sectionLink}>
+                <h2 className="section-title"><IconSparkles /> {t("home.forYou")}</h2>
+              </Link>
             </div>
             <MovieRow
               movies={toMovieRowItems(filterItems(recommendations).slice(0, 12))}

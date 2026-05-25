@@ -41,7 +41,12 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   );
 
-  if (!user && !isPublicRoute) {
+  // Allow manifest and other metadata routes through without auth
+  const isMetadataRoute = request.nextUrl.pathname === "/manifest.webmanifest"
+    || request.nextUrl.pathname.startsWith("/icon")
+    || request.nextUrl.pathname.startsWith("/apple-icon");
+
+  if (!user && !isPublicRoute && !isMetadataRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

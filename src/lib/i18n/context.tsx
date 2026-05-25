@@ -35,12 +35,16 @@ interface I18nContextType {
   setLocale: (locale: Locale) => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
   tmdbLocale: string;
+  country: string;
+  setCountry: (country: string) => void;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
 const STORAGE_KEY = "directors-vault-lang";
 const COOKIE_NAME = "dv-locale";
+const COUNTRY_STORAGE_KEY = "directors-vault-country";
+const COUNTRY_COOKIE_NAME = "dv-country";
 
 function setCookie(name: string, value: string, days: number = 365) {
   if (typeof document === "undefined") return;
@@ -56,9 +60,9 @@ function getCookie(name: string): string | null {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("es");
+  const [country, setCountryState] = useState("CO");
   const [mounted, setMounted] = useState(false);
 
-  // Load saved locale on mount (cookie takes priority, then localStorage)
   useEffect(() => {
     setMounted(true);
     try {
@@ -67,6 +71,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       const saved = cookieLocale || lsLocale;
       if (saved === "en" || saved === "es") {
         setLocaleState(saved);
+      }
+      const cookieCountry = getCookie(COUNTRY_COOKIE_NAME);
+      const lsCountry = localStorage.getItem(COUNTRY_STORAGE_KEY);
+      const savedCountry = cookieCountry || lsCountry;
+      if (savedCountry) {
+        setCountryState(savedCountry);
       }
     } catch {
       // localStorage not available
@@ -80,12 +90,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     } catch {
       // localStorage not available
     }
-    // Set cookie so server components can read it
     setCookie(COOKIE_NAME, newLocale);
-    // Update HTML lang attribute
     if (typeof document !== "undefined") {
       document.documentElement.lang = newLocale;
     }
+  }, []);
+
+  const setCountry = useCallback((newCountry: string) => {
+    setCountryState(newCountry);
+    try {
+      localStorage.setItem(COUNTRY_STORAGE_KEY, newCountry);
+    } catch {
+      // localStorage not available
+    }
+    setCookie(COUNTRY_COOKIE_NAME, newCountry);
   }, []);
 
   const t = useCallback(
@@ -112,17 +130,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const tmdbLocale = TMDB_LOCALES[locale];
 
-  // Don't render children until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <I18nContext.Provider value={{ locale: "es", setLocale, t, tmdbLocale: "es-MX" }}>
+      <I18nContext.Provider value={{ locale: "es", setLocale, t, tmdbLocale: "es-MX", country: "CO", setCountry }}>
         {children}
       </I18nContext.Provider>
     );
   }
 
   return (
-    <I18nContext.Provider value={{ locale, setLocale, t, tmdbLocale }}>
+    <I18nContext.Provider value={{ locale, setLocale, t, tmdbLocale, country, setCountry }}>
       {children}
     </I18nContext.Provider>
   );

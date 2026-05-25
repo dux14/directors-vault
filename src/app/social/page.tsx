@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 
 export default async function SocialPage() {
   const [profile, friendships] = await Promise.all([
-    getMyProfile(),
-    getFriendships(),
+    getMyProfile().catch(() => null),
+    getFriendships().catch(() => ({ friends: [], pendingReceived: [], pendingSent: [] })),
   ]);
 
   return (

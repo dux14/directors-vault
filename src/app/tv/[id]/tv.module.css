@@ -313,6 +313,26 @@
   border-radius: var(--radius-sm);
 }
 
+.tmdbLink {
+  display: inline-block;
+  margin-top: var(--space-sm);
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transition-fast);
+}
+
+.tmdbLink:hover {
+  color: var(--accent-primary);
+}
+
+.noProviders {
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  margin-top: var(--space-sm);
+}
+
 /* TV Status Badge */
 .statusBadge {
   display: inline-flex;

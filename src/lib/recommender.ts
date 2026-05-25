@@ -57,5 +57,5 @@ export async function getRecommendationsForUser(
 
   return Array.from(scoreMap.values())
     .sort((a, b) => b.score - a.score)
-    .slice(0, 20);
+    .slice(0, 30);
 }
