@@ -4,10 +4,12 @@
 
 "use client";
 
+import { useState } from "react";
 import { useTranslation } from "@/lib/i18n/context";
 import RankingList from "./RankingList";
 import MovieRow from "@/components/MovieRow";
-import type { UserMovie } from "@/lib/types";
+import type { MediaItem } from "@/lib/tmdb";
+import type { UserMovie, MediaType } from "@/lib/types";
 import styles from "./page.module.css";
 
 /* ---- SVG Icons ---- */
@@ -63,20 +65,12 @@ const IconTrophy = () => (
   </svg>
 );
 
-interface TMDBResult {
-  id: number;
-  title: string;
-  poster_path: string | null;
-  release_date?: string;
-  vote_average?: number;
-}
-
 interface Props {
   rankedMovies: UserMovie[];
-  recommendations: TMDBResult[];
-  trending: TMDBResult[];
-  nowPlaying: TMDBResult[];
-  topRated: TMDBResult[];
+  recommendations: MediaItem[];
+  trending: MediaItem[];
+  nowPlaying: MediaItem[];
+  topRated: MediaItem[];
 }
 
 export default function HomeClient({
@@ -87,6 +81,20 @@ export default function HomeClient({
   topRated,
 }: Props) {
   const { t } = useTranslation();
+  const [mediaFilter, setMediaFilter] = useState<"all" | MediaType>("all");
+
+  const filterItems = (items: MediaItem[]) =>
+    mediaFilter === "all" ? items : items.filter(i => i.mediaType === mediaFilter);
+
+  const toMovieRowItems = (items: MediaItem[]) =>
+    items.map(i => ({
+      id: i.id,
+      title: i.displayTitle,
+      poster_path: i.posterPath,
+      release_date: i.displayDate,
+      vote_average: i.voteAverage,
+      mediaType: i.mediaType,
+    }));
 
   return (
     <div className="page">
@@ -101,43 +109,68 @@ export default function HomeClient({
               ? t("home.moviesRated", { count: String(rankedMovies.length) })
               : t("home.startRating")}
           </p>
+          <div className={styles.globalFilter}>
+            {(["all", "movie", "tv"] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => setMediaFilter(type)}
+                className={`${styles.filterBtn} ${mediaFilter === type ? styles.filterBtnActive : ""}`}
+              >
+                {t(type === "all" ? "filter.all" : type === "movie" ? "filter.movies" : "filter.series")}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* For You — Recommendations */}
-        {recommendations.length > 0 && (
+        {filterItems(recommendations).length > 0 && (
           <section className="section">
             <div className="section-header">
               <h2 className="section-title"><IconSparkles /> {t("home.forYou")}</h2>
             </div>
-            <MovieRow movies={recommendations.slice(0, 12)} />
+            <MovieRow
+              movies={toMovieRowItems(filterItems(recommendations).slice(0, 12))}
+              showBadge={true}
+            />
           </section>
         )}
 
         {/* Trending Weekly */}
-        {trending.length > 0 && (
+        {filterItems(trending).length > 0 && (
           <section className="section">
             <div className="section-header">
               <h2 className="section-title"><IconFlame /> {t("home.trending")}</h2>
             </div>
-            <MovieRow movies={trending.slice(0, 12)} />
+            <MovieRow
+              movies={toMovieRowItems(filterItems(trending).slice(0, 12))}
+              showBadge={true}
+            />
           </section>
         )}
 
-        {nowPlaying.length > 0 && (
+        {filterItems(nowPlaying).length > 0 && (
           <section className="section">
             <div className="section-header">
-              <h2 className="section-title"><IconPlay /> {t("home.nowPlaying")}</h2>
+              <h2 className="section-title">
+                <IconPlay /> {mediaFilter === "tv" ? t("home.onTheAir") : t("home.nowPlaying")}
+              </h2>
             </div>
-            <MovieRow movies={nowPlaying.slice(0, 12)} />
+            <MovieRow
+              movies={toMovieRowItems(filterItems(nowPlaying).slice(0, 12))}
+              showBadge={true}
+            />
           </section>
         )}
 
-        {topRated.length > 0 && (
+        {filterItems(topRated).length > 0 && (
           <section className="section">
             <div className="section-header">
               <h2 className="section-title"><IconTrophy /> {t("home.topRated")}</h2>
             </div>
-            <MovieRow movies={topRated.slice(0, 12)} />
+            <MovieRow
+              movies={toMovieRowItems(filterItems(topRated).slice(0, 12))}
+              showBadge={true}
+            />
           </section>
         )}
 
