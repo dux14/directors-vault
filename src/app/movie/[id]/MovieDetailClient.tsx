@@ -668,13 +668,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
           {streamingProviders.length > 0 ? (
             <div className={styles.providers}>
               {streamingProviders.map((provider) => (
-                <a
-                  key={provider.provider_id}
-                  href={watchProviders?.link || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.providerChip}
-                >
+                <div key={provider.provider_id} className={styles.providerChip}>
                   <Image
                     src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
                     alt={provider.provider_name}
@@ -683,7 +677,7 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                     className={styles.providerLogo}
                   />
                   <span>{provider.provider_name}</span>
-                </a>
+                </div>
               ))}
             </div>
           ) : (
