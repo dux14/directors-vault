@@ -141,6 +141,10 @@ const en: Record<string, string> = {
   "movie.selectCollection": "Select collection",
   "movie.noCollections": "You don't have collections yet",
   "movie.added": "Added",
+  "movie.searchCollections": "Search collection...",
+  "movie.createCollection": "Create collection",
+  "movie.newCollectionName": "Collection name",
+  "movie.creating": "Creating...",
 
   // Collection Detail
   "collectionDetail.back": "Collections",

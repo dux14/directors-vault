@@ -141,6 +141,10 @@ const es = {
   "movie.selectCollection": "Seleccionar colección",
   "movie.noCollections": "No tienes colecciones aún",
   "movie.added": "Agregada",
+  "movie.searchCollections": "Buscar colección...",
+  "movie.createCollection": "Crear colección",
+  "movie.newCollectionName": "Nombre de la colección",
+  "movie.creating": "Creando...",
 
   // Collection Detail
   "collectionDetail.back": "Colecciones",

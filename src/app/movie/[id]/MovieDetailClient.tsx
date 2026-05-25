@@ -23,6 +23,7 @@ import {
   updateWatchCount,
   addMovieToCollection,
   getUserCollectionsForMovie,
+  createCollection,
 } from "@/lib/actions";
 import { ratingToGrade, getRatingColor, getRatingDef } from "@/lib/ratings";
 import { useTranslation } from "@/lib/i18n/context";
@@ -115,6 +116,10 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const [showCollections, setShowCollections] = useState(false);
   const [collections, setCollections] = useState<(Collection & { hasMovie: boolean })[]>([]);
   const [loadingCollections, setLoadingCollections] = useState(false);
+  const [collectionSearch, setCollectionSearch] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [creatingCollection, setCreatingCollection] = useState(false);
 
   const director = movie.credits?.crew.find((c) => c.job === "Director");
   const cast = movie.credits?.cast.slice(0, 8) || [];
@@ -209,6 +214,21 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     } catch (err) {
       console.error("Error adding to collection:", err);
     }
+  };
+
+  const handleCreateAndAdd = async () => {
+    if (!newCollectionName.trim()) return;
+    setCreatingCollection(true);
+    try {
+      const newCol = await createCollection(newCollectionName.trim(), "custom");
+      await addMovieToCollection(newCol.id, movie.id, movie.title, movie.poster_path);
+      setShowCollections(false);
+      setNewCollectionName("");
+      setIsCreating(false);
+    } catch (err) {
+      console.error("Error creating collection:", err);
+    }
+    setCreatingCollection(false);
   };
 
   return (
@@ -441,7 +461,12 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowCollections(false)}
+              onClick={() => {
+              setShowCollections(false);
+              setCollectionSearch("");
+              setIsCreating(false);
+              setNewCollectionName("");
+            }}
             >
               <motion.div
                 className="modal-content"
@@ -452,34 +477,96 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="modal-handle" />
-                <h3 style={{ marginBottom: "var(--space-md)" }}>
+                <h3 style={{ marginBottom: "var(--space-sm)" }}>
                   {t("movie.selectCollection")}
                 </h3>
+
+                {/* Search + Create toggle row */}
+                <div style={{ display: "flex", gap: "var(--space-xs)", marginBottom: "var(--space-sm)" }}>
+                  <input
+                    type="text"
+                    placeholder={t("movie.searchCollections")}
+                    value={collectionSearch}
+                    onChange={(e) => setCollectionSearch(e.target.value)}
+                    autoFocus={typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches}
+                    style={{
+                      flex: 1,
+                      padding: "var(--space-sm) var(--space-md)",
+                      background: "var(--bg-tertiary)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: "var(--radius-md)",
+                      color: "var(--text-primary)",
+                      fontSize: "0.875rem",
+                    }}
+                  />
+                  <button
+                    onClick={() => setIsCreating(!isCreating)}
+                    className="btn btn-primary btn-icon btn-sm"
+                    aria-label={t("movie.createCollection")}
+                  >
+                    <IconPlus />
+                  </button>
+                </div>
+
+                {/* Inline create form */}
+                {isCreating && (
+                  <div style={{ display: "flex", gap: "var(--space-xs)", marginBottom: "var(--space-sm)" }}>
+                    <input
+                      type="text"
+                      placeholder={t("movie.newCollectionName")}
+                      value={newCollectionName}
+                      onChange={(e) => setNewCollectionName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleCreateAndAdd(); }}
+                      autoFocus
+                      style={{
+                        flex: 1,
+                        padding: "var(--space-sm) var(--space-md)",
+                        background: "var(--bg-tertiary)",
+                        border: "1px solid var(--border-subtle)",
+                        borderRadius: "var(--radius-md)",
+                        color: "var(--text-primary)",
+                        fontSize: "0.875rem",
+                      }}
+                    />
+                    <button
+                      onClick={handleCreateAndAdd}
+                      disabled={creatingCollection || !newCollectionName.trim()}
+                      className="btn btn-primary btn-sm"
+                    >
+                      {creatingCollection ? t("movie.creating") : t("movie.createCollection")}
+                    </button>
+                  </div>
+                )}
+
+                {/* Collection list with scroll */}
                 {loadingCollections ? (
                   <p style={{ textAlign: "center", opacity: 0.6 }}>...</p>
-                ) : collections.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-                    {collections.map((col) => (
-                      <button
-                        key={col.id}
-                        disabled={col.hasMovie}
-                        onClick={() => handleAddToCollection(col.id)}
-                        className={`btn ${col.hasMovie ? "btn-ghost" : "btn-secondary"}`}
-                        style={{ justifyContent: "space-between", width: "100%" }}
-                      >
-                        <span>{col.name}</span>
-                        {col.hasMovie && (
-                          <span style={{ color: "var(--accent-primary)", fontSize: "0.85em" }}>
-                            <IconCheck /> {t("movie.added")}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
                 ) : (
-                  <p style={{ textAlign: "center", opacity: 0.6 }}>
-                    {t("movie.noCollections")}
-                  </p>
+                  <div style={{ maxHeight: "50vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+                    {collections
+                      .filter((col) => col.name.toLowerCase().includes(collectionSearch.toLowerCase()))
+                      .map((col) => (
+                        <button
+                          key={col.id}
+                          disabled={col.hasMovie}
+                          onClick={() => handleAddToCollection(col.id)}
+                          className={`btn ${col.hasMovie ? "btn-ghost" : "btn-secondary"}`}
+                          style={{ justifyContent: "space-between", width: "100%" }}
+                        >
+                          <span>{col.name}</span>
+                          {col.hasMovie && (
+                            <span style={{ color: "var(--accent-primary)", fontSize: "0.85em" }}>
+                              <IconCheck /> {t("movie.added")}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    {collections.length === 0 && !collectionSearch && !isCreating && (
+                      <p style={{ textAlign: "center", opacity: 0.6 }}>
+                        {t("movie.noCollections")}
+                      </p>
+                    )}
+                  </div>
                 )}
               </motion.div>
             </motion.div>
