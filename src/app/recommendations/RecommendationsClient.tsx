@@ -55,17 +55,12 @@ export default function RecommendationsClient({
 }: Props) {
   const { t } = useTranslation();
   const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
-  const [showAll, setShowAll] = useState(false);
 
   const filteredRecommendations = mediaFilter === "all"
     ? balancedSlice(recommendations)
     : recommendations.filter((item) => item.mediaType === mediaFilter).slice(0, PAGE_SIZE);
 
-  const visibleRecommendations = showAll
-    ? filteredRecommendations
-    : filteredRecommendations.slice(0, 20);
-
-  const hasMore = filteredRecommendations.length > 20 && !showAll;
+  const visibleRecommendations = filteredRecommendations;
 
   return (
     <div className="page">
@@ -75,7 +70,7 @@ export default function RecommendationsClient({
           <p>
             {hasRatedMovies
               ? recommendations.length > 0
-                ? t("recommendations.subtitle", { count: recommendations.length })
+                ? t("recommendations.subtitle", { count: filteredRecommendations.length })
                 : t("recommendations.rateMore")
               : t("recommendations.startRating")}
           </p>
@@ -88,7 +83,7 @@ export default function RecommendationsClient({
               {(["all", "movie", "tv"] as const).map((type) => (
                 <button
                   key={type}
-                  onClick={() => { setMediaFilter(type); setShowAll(false); }}
+                  onClick={() => setMediaFilter(type)}
                   className={`${styles.filterBtn} ${mediaFilter === type ? styles.filterBtnActive : ""}`}
                 >
                   {t(type === "all" ? "filter.all" : type === "movie" ? "filter.movies" : "filter.series")}
@@ -122,16 +117,6 @@ export default function RecommendationsClient({
               ))}
             </motion.div>
 
-            {hasMore && (
-              <div className={styles.showMoreWrap}>
-                <button
-                  onClick={() => setShowAll(true)}
-                  className="btn btn-ghost"
-                >
-                  {t("recommendations.showMore")}
-                </button>
-              </div>
-            )}
           </>
         ) : (
           <div className="empty-state">
