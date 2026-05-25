@@ -252,26 +252,26 @@ export async function getFriendships(): Promise<{
 export async function getFriendStats(friendId: string): Promise<{
   watched: number;
   avgRating: number;
-  topMovies: { tmdb_movie_id: number; personal_rating: number }[];
+  topItems: { tmdb_id: number; media_type: string; personal_rating: number }[];
 }> {
   const supabase = await createClient();
 
   const { data: movies } = await supabase
     .from("user_movies")
-    .select("tmdb_movie_id, status, personal_rating")
+    .select("tmdb_id, media_type, status, personal_rating")
     .eq("user_id", friendId)
     .eq("status", "watched");
 
-  if (!movies) return { watched: 0, avgRating: 0, topMovies: [] };
+  if (!movies) return { watched: 0, avgRating: 0, topItems: [] };
 
   const rated = movies.filter((m) => m.personal_rating);
   const avgRating = rated.length > 0
     ? rated.reduce((sum, m) => sum + (m.personal_rating || 0), 0) / rated.length
     : 0;
 
-  const topMovies = rated
+  const topItems = rated
     .sort((a, b) => (b.personal_rating || 0) - (a.personal_rating || 0))
     .slice(0, 10);
 
-  return { watched: movies.length, avgRating, topMovies };
+  return { watched: movies.length, avgRating, topItems };
 }

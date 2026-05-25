@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type {
   UserMovie,
+  MediaType,
   MovieStatus,
   Collection,
   CollectionType,
@@ -54,14 +55,14 @@ export async function getUserMovies(
 }
 
 /** Get the user's ranked movies (watched, sorted by rating desc) */
-export async function getRankedMovies(): Promise<UserMovie[]> {
+export async function getRankedMovies(mediaType?: MediaType): Promise<UserMovie[]> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("user_movies")
     .select("*")
     .eq("user_id", user.id)
@@ -70,13 +71,19 @@ export async function getRankedMovies(): Promise<UserMovie[]> {
     .order("personal_rating", { ascending: false })
     .order("tier_position", { ascending: true });
 
+  if (mediaType) {
+    query = query.eq("media_type", mediaType);
+  }
+
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data as UserMovie[]) || [];
 }
 
 /** Get a specific user_movie entry by TMDB ID */
 export async function getUserMovieByTmdbId(
-  tmdbMovieId: number
+  tmdbId: number,
+  mediaType: MediaType
 ): Promise<UserMovie | null> {
   const supabase = await createClient();
   const {
@@ -88,7 +95,8 @@ export async function getUserMovieByTmdbId(
     .from("user_movies")
     .select("*")
     .eq("user_id", user.id)
-    .eq("tmdb_movie_id", tmdbMovieId)
+    .eq("tmdb_id", tmdbId)
+    .eq("media_type", mediaType)
     .maybeSingle();
 
   if (error) throw new Error(error.message);
@@ -97,7 +105,8 @@ export async function getUserMovieByTmdbId(
 
 /** Set a movie's status (watched, want_to_watch, not_interested) */
 export async function setMovieStatus(
-  tmdbMovieId: number,
+  tmdbId: number,
+  mediaType: MediaType,
   status: MovieStatus,
   movieTitle: string,
   moviePosterPath: string | null,
@@ -112,7 +121,8 @@ export async function setMovieStatus(
 
   const payload: Record<string, unknown> = {
     user_id: user.id,
-    tmdb_movie_id: tmdbMovieId,
+    tmdb_id: tmdbId,
+    media_type: mediaType,
     status,
     movie_title: movieTitle,
     movie_poster_path: moviePosterPath,
@@ -130,7 +140,7 @@ export async function setMovieStatus(
   const { data, error } = await supabase
     .from("user_movies")
     .upsert(payload, {
-      onConflict: "user_id,tmdb_movie_id",
+      onConflict: "user_id,tmdb_id,media_type",
     })
     .select()
     .single();
@@ -143,7 +153,8 @@ export async function setMovieStatus(
 
 /** Rate a movie with letter grade (1=F ... 8=S) */
 export async function rateMovie(
-  tmdbMovieId: number,
+  tmdbId: number,
+  mediaType: MediaType,
   rating: number
 ): Promise<UserMovie> {
   const supabase = await createClient();
@@ -175,7 +186,8 @@ export async function rateMovie(
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", user.id)
-    .eq("tmdb_movie_id", tmdbMovieId)
+    .eq("tmdb_id", tmdbId)
+    .eq("media_type", mediaType)
     .select()
     .single();
 
@@ -186,7 +198,8 @@ export async function rateMovie(
 
 /** Update watch count for a movie */
 export async function updateWatchCount(
-  tmdbMovieId: number,
+  tmdbId: number,
+  mediaType: MediaType,
   count: number
 ): Promise<UserMovie> {
   const supabase = await createClient();
@@ -204,7 +217,8 @@ export async function updateWatchCount(
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", user.id)
-    .eq("tmdb_movie_id", tmdbMovieId)
+    .eq("tmdb_id", tmdbId)
+    .eq("media_type", mediaType)
     .select()
     .single();
 
@@ -214,7 +228,7 @@ export async function updateWatchCount(
 }
 
 /** Remove a movie from user's list */
-export async function removeUserMovie(tmdbMovieId: number): Promise<void> {
+export async function removeUserMovie(tmdbId: number, mediaType: MediaType): Promise<void> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -225,7 +239,8 @@ export async function removeUserMovie(tmdbMovieId: number): Promise<void> {
     .from("user_movies")
     .delete()
     .eq("user_id", user.id)
-    .eq("tmdb_movie_id", tmdbMovieId);
+    .eq("tmdb_id", tmdbId)
+    .eq("media_type", mediaType);
 
   if (error) throw new Error(error.message);
   revalidatePath("/");
@@ -349,7 +364,8 @@ export async function getCollectionMovies(
 /** Add a movie to a collection */
 export async function addMovieToCollection(
   collectionId: string,
-  tmdbMovieId: number,
+  tmdbId: number,
+  mediaType: MediaType,
   movieTitle: string,
   moviePosterPath: string | null
 ): Promise<CollectionMovie> {
@@ -370,12 +386,13 @@ export async function addMovieToCollection(
     .upsert(
       {
         collection_id: collectionId,
-        tmdb_movie_id: tmdbMovieId,
+        tmdb_id: tmdbId,
+        media_type: mediaType,
         movie_title: movieTitle,
         movie_poster_path: moviePosterPath,
         sort_order: nextOrder,
       },
-      { onConflict: "collection_id,tmdb_movie_id" }
+      { onConflict: "collection_id,tmdb_id,media_type" }
     )
     .select()
     .single();
@@ -388,7 +405,8 @@ export async function addMovieToCollection(
 /** Remove a movie from a collection */
 export async function removeMovieFromCollection(
   collectionId: string,
-  tmdbMovieId: number
+  tmdbId: number,
+  mediaType: MediaType
 ): Promise<void> {
   const supabase = await createClient();
 
@@ -396,16 +414,18 @@ export async function removeMovieFromCollection(
     .from("collection_movies")
     .delete()
     .eq("collection_id", collectionId)
-    .eq("tmdb_movie_id", tmdbMovieId);
+    .eq("tmdb_id", tmdbId)
+    .eq("media_type", mediaType);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/collections/${collectionId}`);
 }
 
 /** Get user collections with info about whether a specific movie is already in them */
-export async function getUserCollectionsForMovie(tmdbMovieId: number): Promise<
-  (Collection & { hasMovie: boolean })[]
-> {
+export async function getUserCollectionsForMovie(
+  tmdbId: number,
+  mediaType: MediaType
+): Promise<(Collection & { hasMovie: boolean })[]> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -420,7 +440,8 @@ export async function getUserCollectionsForMovie(tmdbMovieId: number): Promise<
     supabase
       .from("collection_movies")
       .select("collection_id")
-      .eq("tmdb_movie_id", tmdbMovieId),
+      .eq("tmdb_id", tmdbId)
+      .eq("media_type", mediaType),
   ]);
 
   const collections = (collectionsRes.data || []) as Collection[];
@@ -438,7 +459,7 @@ export async function getUserCollectionsForMovie(tmdbMovieId: number): Promise<
 export async function createCollectionWithMovies(
   name: string,
   type: CollectionType,
-  movies: { tmdb_movie_id: number; movie_title: string; movie_poster_path: string | null }[]
+  movies: { tmdb_id: number; media_type: MediaType; movie_title: string; movie_poster_path: string | null }[]
 ): Promise<Collection> {
   const supabase = await createClient();
   const {
@@ -459,7 +480,8 @@ export async function createCollectionWithMovies(
   if (movies.length > 0) {
     const movieRows = movies.map((m, i) => ({
       collection_id: collection.id,
-      tmdb_movie_id: m.tmdb_movie_id,
+      tmdb_id: m.tmdb_id,
+      media_type: m.media_type,
       movie_title: m.movie_title,
       movie_poster_path: m.movie_poster_path,
       sort_order: i,
@@ -467,7 +489,7 @@ export async function createCollectionWithMovies(
 
     const { error: moviesError } = await supabase
       .from("collection_movies")
-      .upsert(movieRows, { onConflict: "collection_id,tmdb_movie_id" });
+      .upsert(movieRows, { onConflict: "collection_id,tmdb_id,media_type" });
 
     if (moviesError) throw new Error(moviesError.message);
   }
