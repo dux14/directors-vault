@@ -10,6 +10,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { getPosterUrl } from "@/lib/tmdb";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
+import { useTranslation } from "@/lib/i18n/context";
 import type { MediaType, MovieStatus } from "@/lib/types";
 import MediaBadge from "./MediaBadge";
 import styles from "./MovieCard.module.css";
@@ -45,7 +46,9 @@ export default function MovieCard({
   mediaType = "movie",
   showBadge = false,
 }: MovieCardProps) {
+  const { t } = useTranslation();
   const year = releaseDate ? new Date(releaseDate).getFullYear() : null;
+  const isUpcoming = releaseDate ? new Date(releaseDate) > new Date() : false;
   const grade = userRating ? ratingToGrade(userRating) : null;
   const gradeColor = userRating ? getRatingColor(userRating) : null;
 
@@ -69,6 +72,9 @@ export default function MovieCard({
       <Link href={mediaType === "tv" ? `/tv/${tmdbId}` : `/movie/${tmdbId}`} className={styles.link}>
         <div className={styles.posterWrapper}>
           {showBadge && <MediaBadge type={mediaType} />}
+          {isUpcoming && (
+            <span className={styles.upcomingBadge}>{t("media.upcoming")}</span>
+          )}
           <Image
             src={getPosterUrl(posterPath, size === "small" ? "small" : "medium")}
             alt={title}

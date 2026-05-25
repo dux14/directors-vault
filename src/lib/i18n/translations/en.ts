@@ -149,6 +149,8 @@ const en: Record<string, string> = {
   "movie.whereToWatch": "Where to watch",
   "movie.streamOn": "Stream on",
   "movie.rentOrBuy": "Rent or buy",
+  "movie.viewOnTmdb": "View on TMDB",
+  "movie.notAvailableRegion": "Not available in your region",
 
   // Collection Detail
   "collectionDetail.back": "Collections",
@@ -231,6 +233,19 @@ const en: Record<string, string> = {
 
   // Home — new sections
   "home.onTheAir": "On the Air",
+
+  // Media
+  "media.upcoming": "Upcoming",
+
+  // Recommendations
+  "recommendations.showMore": "Show more",
+  "recommendations.subtitle": "{count} recommended titles",
+  "recommendations.rateMore": "Rate more titles to improve recommendations",
+  "recommendations.startRating": "Rate titles to get personalized recommendations",
+  "recommendations.emptyTitle": "No recommendations yet",
+  "recommendations.emptyDesc": "Try rating more titles with a grade of B or better so we can recommend to you.",
+  "recommendations.emptyNoRatings": "Rate your titles",
+  "recommendations.emptyNoRatingsDesc": "Search for titles you've seen, mark them as watched and rate them. We'll use your favorites to recommend new titles.",
 };
 
 export default en;

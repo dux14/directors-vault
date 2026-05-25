@@ -4,6 +4,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n/context";
 import MovieCard from "@/components/MovieCard";
@@ -27,6 +28,8 @@ const IconStar = () => (
   </svg>
 );
 
+const INITIAL_SHOW_COUNT = 20;
+
 interface Props {
   recommendations: MediaItem[];
   hasRatedMovies: boolean;
@@ -37,6 +40,18 @@ export default function RecommendationsClient({
   hasRatedMovies,
 }: Props) {
   const { t } = useTranslation();
+  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
+  const [showAll, setShowAll] = useState(false);
+
+  const filteredRecommendations = mediaFilter === "all"
+    ? recommendations
+    : recommendations.filter((item) => item.mediaType === mediaFilter);
+
+  const visibleRecommendations = showAll
+    ? filteredRecommendations
+    : filteredRecommendations.slice(0, INITIAL_SHOW_COUNT);
+
+  const hasMore = filteredRecommendations.length > INITIAL_SHOW_COUNT && !showAll;
 
   return (
     <div className="page">
@@ -45,47 +60,73 @@ export default function RecommendationsClient({
           <h1><IconSparkles /> {t("home.forYou")}</h1>
           <p>
             {hasRatedMovies
-              ? t("home.forYou") + " — " + (recommendations.length > 0
-                  ? `${recommendations.length} películas recomendadas`
-                  : "Califica más películas para mejorar las recomendaciones")
-              : "Califica películas para obtener recomendaciones personalizadas"}
+              ? recommendations.length > 0
+                ? t("recommendations.subtitle", { count: recommendations.length })
+                : t("recommendations.rateMore")
+              : t("recommendations.startRating")}
           </p>
         </div>
 
         {recommendations.length > 0 ? (
-          <motion.div
-            className="movie-grid"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            {recommendations.map((movie, index) => (
-              <motion.div
-                key={`${movie.id}-${movie.mediaType}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03, duration: 0.3 }}
-              >
-                <MovieCard
-                  tmdbId={movie.id}
-                  title={movie.displayTitle}
-                  posterPath={movie.posterPath}
-                  releaseDate={movie.displayDate}
-                  rating={movie.voteAverage}
-                  mediaType={movie.mediaType}
-                  showBadge={true}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
+          <>
+            {/* Media type filter */}
+            <div className={styles.filterToggle}>
+              {(["all", "movie", "tv"] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => { setMediaFilter(type); setShowAll(false); }}
+                  className={`${styles.filterBtn} ${mediaFilter === type ? styles.filterBtnActive : ""}`}
+                >
+                  {t(type === "all" ? "filter.all" : type === "movie" ? "filter.movies" : "filter.series")}
+                </button>
+              ))}
+            </div>
+
+            <motion.div
+              className="movie-grid"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              {visibleRecommendations.map((movie, index) => (
+                <motion.div
+                  key={`${movie.id}-${movie.mediaType}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03, duration: 0.3 }}
+                >
+                  <MovieCard
+                    tmdbId={movie.id}
+                    title={movie.displayTitle}
+                    posterPath={movie.posterPath}
+                    releaseDate={movie.displayDate}
+                    rating={movie.voteAverage}
+                    mediaType={movie.mediaType}
+                    showBadge={true}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {hasMore && (
+              <div className={styles.showMoreWrap}>
+                <button
+                  onClick={() => setShowAll(true)}
+                  className="btn btn-ghost"
+                >
+                  {t("recommendations.showMore")}
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="empty-state">
             <div className="icon"><IconStar /></div>
-            <h3>{hasRatedMovies ? "Sin recomendaciones aún" : "Califica tus películas"}</h3>
+            <h3>{hasRatedMovies ? t("recommendations.emptyTitle") : t("recommendations.emptyNoRatings")}</h3>
             <p>
               {hasRatedMovies
-                ? "Intenta calificar más películas con nota B o mejor para que podamos recomendarte."
-                : "Busca películas que hayas visto, márcalas como vistas y califícalas. Usaremos tus favoritas para recomendarte nuevas películas."}
+                ? t("recommendations.emptyDesc")
+                : t("recommendations.emptyNoRatingsDesc")}
             </p>
           </div>
         )}

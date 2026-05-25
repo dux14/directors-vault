@@ -101,7 +101,7 @@ interface Props {
 export default function MovieDetailClient({ movie, userMovie }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const { t, tmdbLocale } = useTranslation();
+  const { t, tmdbLocale, country } = useTranslation();
   const [currentStatus, setCurrentStatus] = useState<MovieStatus | null>(
     userMovie?.status || null
   );
@@ -126,14 +126,16 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const year = movie.release_date
     ? new Date(movie.release_date).getFullYear()
     : null;
+  const isUpcoming = movie.release_date
+    ? new Date(movie.release_date) > new Date()
+    : false;
   const runtime = movie.runtime
     ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
     : null;
   const trailer = movie.videos?.results.find(
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
-  const countryCode = tmdbLocale.split("-")[1]?.toUpperCase() || "US";
-  const watchProviders = movie["watch/providers"]?.results[countryCode];
+  const watchProviders = movie["watch/providers"]?.results[country];
   const streamingProviders = watchProviders?.flatrate || watchProviders?.rent || watchProviders?.buy || [];
 
   const handleStatusChange = async (status: MovieStatus) => {
@@ -307,6 +309,9 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
             <div className={styles.meta}>
               {year && <span>{year}</span>}
               {runtime && <span>{runtime}</span>}
+              {isUpcoming && (
+                <span className={styles.upcomingBadge}>{t("media.upcoming")}</span>
+              )}
               {movie.vote_average > 0 && (
                 <span className={styles.tmdbRating}>
                   <IconStar /> {movie.vote_average.toFixed(1)}
@@ -658,31 +663,39 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
         </section>
 
         {/* Streaming Providers */}
-        {streamingProviders.length > 0 && (
-          <section className={styles.section}>
-            <h2 className="section-title">{t("movie.whereToWatch")}</h2>
-            <div className={styles.providers}>
-              {streamingProviders.map((provider) => (
+        <section className={styles.section}>
+          <h2 className="section-title">{t("movie.whereToWatch")}</h2>
+          {streamingProviders.length > 0 ? (
+            <>
+              <div className={styles.providers}>
+                {streamingProviders.map((provider) => (
+                  <div key={provider.provider_id} className={styles.providerChip}>
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                      alt={provider.provider_name}
+                      width={32}
+                      height={32}
+                      className={styles.providerLogo}
+                    />
+                    <span>{provider.provider_name}</span>
+                  </div>
+                ))}
+              </div>
+              {watchProviders?.link && (
                 <a
-                  key={provider.provider_id}
-                  href={watchProviders?.link || "#"}
+                  href={watchProviders.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={styles.providerChip}
+                  className={styles.tmdbLink}
                 >
-                  <Image
-                    src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
-                    alt={provider.provider_name}
-                    width={32}
-                    height={32}
-                    className={styles.providerLogo}
-                  />
-                  <span>{provider.provider_name}</span>
+                  {t("movie.viewOnTmdb")}
                 </a>
-              ))}
-            </div>
-          </section>
-        )}
+              )}
+            </>
+          ) : (
+            <p className={styles.noProviders}>{t("movie.notAvailableRegion")}</p>
+          )}
+        </section>
 
         {/* Director */}
         {director && (

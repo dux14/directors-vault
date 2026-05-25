@@ -9,7 +9,6 @@ import { ratingToGrade, getRatingColor } from "@/lib/ratings";
 import { swapTierPosition } from "@/lib/actions";
 import { useTranslation } from "@/lib/i18n/context";
 import type { UserMovie, MediaType } from "@/lib/types";
-import MediaBadge from "@/components/MediaBadge";
 import styles from "./RankingList.module.css";
 
 interface RankingListProps {
@@ -35,35 +34,39 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
   const [mediaFilter, setMediaFilter] = useState<"all" | MediaType>("all");
   const [isPending, startTransition] = useTransition();
 
-  const effectiveReorderMode = reorderMode && mediaFilter === "all";
+  const effectiveReorderMode = reorderMode;
 
   const filteredMovies = mediaFilter === "all"
     ? movies
     : movies.filter(m => m.media_type === mediaFilter);
 
-  const isFirstInTier = (index: number) => {
-    if (index === 0) return true;
-    return movies[index].personal_rating !== movies[index - 1].personal_rating;
+  const isFirstInTier = (globalIndex: number) => {
+    if (globalIndex === 0) return true;
+    return movies[globalIndex].personal_rating !== movies[globalIndex - 1].personal_rating;
   };
 
-  const isLastInTier = (index: number) => {
-    if (index === movies.length - 1) return true;
-    return movies[index].personal_rating !== movies[index + 1].personal_rating;
+  const isLastInTier = (globalIndex: number) => {
+    if (globalIndex === movies.length - 1) return true;
+    return movies[globalIndex].personal_rating !== movies[globalIndex + 1].personal_rating;
   };
 
-  const handleSwap = (index: number, direction: "up" | "down") => {
-    const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= movies.length) return;
+  const handleSwap = (filteredIndex: number, direction: "up" | "down") => {
+    // Map filtered indices to full-array indices
+    const currentGlobalIndex = movies.indexOf(filteredMovies[filteredIndex]);
+    const adjacentFilteredIndex = direction === "up" ? filteredIndex - 1 : filteredIndex + 1;
+    if (adjacentFilteredIndex < 0 || adjacentFilteredIndex >= filteredMovies.length) return;
+    const adjacentGlobalIndex = movies.indexOf(filteredMovies[adjacentFilteredIndex]);
 
-    // Optimistic update
+    // Optimistic update — swap in the full array
     const newMovies = [...movies];
-    [newMovies[index], newMovies[swapIndex]] = [newMovies[swapIndex], newMovies[index]];
+    [newMovies[currentGlobalIndex], newMovies[adjacentGlobalIndex]] =
+      [newMovies[adjacentGlobalIndex], newMovies[currentGlobalIndex]];
     setMovies(newMovies);
 
     // Server sync
     startTransition(async () => {
       try {
-        await swapTierPosition(movies[index].id, direction);
+        await swapTierPosition(movies[currentGlobalIndex].id, direction);
       } catch {
         setMovies(initialMovies); // Revert on error
       }
@@ -84,14 +87,12 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
             </button>
           ))}
         </div>
-        {mediaFilter === "all" && (
-          <button
-            onClick={() => setReorderMode(!reorderMode)}
-            className="btn btn-ghost btn-sm"
-          >
-            {reorderMode ? t("ranking.done") : t("ranking.reorder")}
-          </button>
-        )}
+        <button
+          onClick={() => setReorderMode(!reorderMode)}
+          className="btn btn-ghost btn-sm"
+        >
+          {reorderMode ? t("ranking.done") : t("ranking.reorder")}
+        </button>
       </div>
       <div className={styles.list}>
         {filteredMovies.map((movie, index) => {
@@ -101,8 +102,11 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
             : null;
           const grade = ratingToGrade(movie.personal_rating);
           const gradeColor = getRatingColor(movie.personal_rating);
-          // index in the full movies array (needed for reorder boundary checks)
           const globalIndex = movies.indexOf(movie);
+
+          // Boundary checks: in filtered view, check against filtered neighbours
+          const isFirstBoundary = index === 0 || isFirstInTier(globalIndex);
+          const isLastBoundary = index === filteredMovies.length - 1 || isLastInTier(globalIndex);
 
           return (
             <motion.div
@@ -117,16 +121,16 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
                     {/* Reorder arrows */}
                     <div className={styles.reorderControls}>
                       <button
-                        onClick={() => handleSwap(globalIndex, "up")}
-                        disabled={isFirstInTier(globalIndex) || isPending}
+                        onClick={() => handleSwap(index, "up")}
+                        disabled={isFirstBoundary || isPending}
                         className={styles.arrowBtn}
                         aria-label="Move up"
                       >
                         <IconArrowUp />
                       </button>
                       <button
-                        onClick={() => handleSwap(globalIndex, "down")}
-                        disabled={isLastInTier(globalIndex) || isPending}
+                        onClick={() => handleSwap(index, "down")}
+                        disabled={isLastBoundary || isPending}
                         className={styles.arrowBtn}
                         aria-label="Move down"
                       >
@@ -144,7 +148,6 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
                         className={styles.posterImg}
                         unoptimized={!movie.movie_poster_path}
                       />
-                      <MediaBadge type={movie.media_type} />
                     </div>
 
                     {/* Info */}
@@ -181,7 +184,6 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
                         className={styles.posterImg}
                         unoptimized={!movie.movie_poster_path}
                       />
-                      <MediaBadge type={movie.media_type} />
                     </div>
 
                     {/* Info */}

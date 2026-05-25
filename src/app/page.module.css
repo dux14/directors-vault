@@ -35,3 +35,13 @@
   color: var(--bg-primary);
   font-weight: 600;
 }
+
+.sectionLink {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity var(--transition-fast);
+}
+
+.sectionLink:hover {
+  opacity: 0.75;
+}

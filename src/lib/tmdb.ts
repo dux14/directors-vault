@@ -240,6 +240,8 @@ export interface TMDBTvDetail extends Omit<TMDBTvShow, "genre_ids"> {
       buy?: { provider_id: number; provider_name: string; logo_path: string }[];
     }>;
   };
+  recommendations?: { results: TMDBTvShow[] };
+  similar?: { results: TMDBTvShow[] };
 }
 
 export interface TMDBTvSearchResponse {
@@ -393,6 +395,7 @@ export async function getMovieDetail(
 ): Promise<TMDBMovieDetail> {
   return tmdbFetch<TMDBMovieDetail>(`/movie/${movieId}`, {
     append_to_response: "credits,similar,recommendations,videos,watch/providers",
+    include_video_language: "en,es,null",
   }, locale);
 }
 
@@ -548,10 +551,11 @@ export async function getMovieRecommendations(
   return tmdbFetch<TMDBSearchResponse>(`/movie/${movieId}/recommendations`, {}, locale);
 }
 
-/** Get full TV show details with credits, videos, and watch providers */
+/** Get full TV show details with credits, videos, watch providers, recommendations, and similar */
 export async function getTvDetail(tvId: number, locale?: string): Promise<TMDBTvDetail> {
   return tmdbFetch<TMDBTvDetail>(`/tv/${tvId}`, {
-    append_to_response: "credits,videos,watch/providers",
+    append_to_response: "credits,videos,watch/providers,recommendations,similar",
+    include_video_language: "en,es,null",
   }, locale);
 }
 

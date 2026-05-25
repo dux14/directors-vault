@@ -3,4 +3,36 @@
  * ============================================ */
 
 /* The page uses global styles (page, container, movie-grid, empty-state) */
-/* No additional custom styles needed currently */
+
+.filterToggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  margin-bottom: var(--space-md);
+  width: fit-content;
+}
+
+.filterBtn {
+  padding: 4px 12px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filterBtnActive {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+.showMoreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-lg);
+}
