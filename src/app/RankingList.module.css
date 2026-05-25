@@ -2,6 +2,12 @@
  * RankingList Styles
  * ============================================ */
 
+.header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-sm);
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -16,12 +22,20 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  text-decoration: none;
-  transition: all var(--transition-fast);
   min-height: 72px;
 }
 
-.item:hover {
+.itemLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+  transition: all var(--transition-fast);
+}
+
+.item:has(.itemLink):hover {
   background: var(--bg-card-hover);
   border-color: var(--border-default);
   transform: translateX(4px);
@@ -76,6 +90,35 @@
   color: var(--accent-primary);
 }
 
-.ratingStar {
-  font-size: 0.875rem;
+/* Reorder mode */
+.reorderControls {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.arrowBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arrowBtn:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  color: var(--accent-primary);
+}
+
+.arrowBtn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
 }

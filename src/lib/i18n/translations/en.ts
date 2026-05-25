@@ -166,6 +166,10 @@ const en: Record<string, string> = {
   "collectionDetail.removeMovie": "Remove from collection",
   "collectionDetail.confirmRemove": "Tap again to confirm",
 
+  // Ranking
+  "ranking.reorder": "Reorder",
+  "ranking.done": "Done",
+
   // Rating grades
   "rating.S": "Masterpiece",
   "rating.Aplus": "Excellent",

@@ -166,6 +166,10 @@ const es = {
   "collectionDetail.removeMovie": "Quitar de la colección",
   "collectionDetail.confirmRemove": "Toca de nuevo para confirmar",
 
+  // Ranking
+  "ranking.reorder": "Reordenar",
+  "ranking.done": "Listo",
+
   // Rating grades
   "rating.S": "Obra maestra",
   "rating.Aplus": "Excelente",
