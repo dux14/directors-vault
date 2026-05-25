@@ -680,32 +680,26 @@ export default function TvDetailClient({ tvShow, userMovie }: Props) {
         <section className={styles.section}>
           <h2 className="section-title">{t("movie.whereToWatch")}</h2>
           {streamingProviders.length > 0 ? (
-            <>
-              <div className={styles.providers}>
-                {streamingProviders.map((provider) => (
-                  <div key={provider.provider_id} className={styles.providerChip}>
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
-                      alt={provider.provider_name}
-                      width={32}
-                      height={32}
-                      className={styles.providerLogo}
-                    />
-                    <span>{provider.provider_name}</span>
-                  </div>
-                ))}
-              </div>
-              {watchProviders?.link && (
+            <div className={styles.providers}>
+              {streamingProviders.map((provider) => (
                 <a
-                  href={watchProviders.link}
+                  key={provider.provider_id}
+                  href={watchProviders?.link || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={styles.tmdbLink}
+                  className={styles.providerChip}
                 >
-                  {t("movie.viewOnTmdb")}
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                    alt={provider.provider_name}
+                    width={32}
+                    height={32}
+                    className={styles.providerLogo}
+                  />
+                  <span>{provider.provider_name}</span>
                 </a>
-              )}
-            </>
+              ))}
+            </div>
           ) : (
             <p className={styles.noProviders}>{t("movie.notAvailableRegion")}</p>
           )}

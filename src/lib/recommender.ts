@@ -55,7 +55,20 @@ export async function getRecommendationsForUser(
     }
   }
 
-  return Array.from(scoreMap.values())
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 30);
+  const sorted = Array.from(scoreMap.values())
+    .sort((a, b) => b.score - a.score);
+
+  const movies = sorted.filter((i) => i.mediaType === "movie");
+  const tvShows = sorted.filter((i) => i.mediaType === "tv");
+
+  const balanced: ScoredMediaItem[] = [];
+  const half = 15;
+  const mi = Math.min(movies.length, half);
+  const ti = Math.min(tvShows.length, half);
+  for (let i = 0; i < Math.max(mi, ti); i++) {
+    if (i < mi) balanced.push(movies[i]);
+    if (i < ti) balanced.push(tvShows[i]);
+  }
+  const remaining = sorted.filter((i) => !balanced.includes(i));
+  return [...balanced, ...remaining].slice(0, 60);
 }

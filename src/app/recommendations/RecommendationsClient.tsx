@@ -28,7 +28,21 @@ const IconStar = () => (
   </svg>
 );
 
-const INITIAL_SHOW_COUNT = 20;
+const PAGE_SIZE = 30;
+const HALF = 15;
+
+function balancedSlice(items: MediaItem[]): MediaItem[] {
+  const movies = items.filter((i) => i.mediaType === "movie");
+  const tvShows = items.filter((i) => i.mediaType === "tv");
+  const result: MediaItem[] = [];
+  const mi = Math.min(movies.length, HALF);
+  const ti = Math.min(tvShows.length, HALF);
+  for (let i = 0; i < Math.max(mi, ti); i++) {
+    if (i < mi) result.push(movies[i]);
+    if (i < ti) result.push(tvShows[i]);
+  }
+  return result;
+}
 
 interface Props {
   recommendations: MediaItem[];
@@ -44,14 +58,14 @@ export default function RecommendationsClient({
   const [showAll, setShowAll] = useState(false);
 
   const filteredRecommendations = mediaFilter === "all"
-    ? recommendations
-    : recommendations.filter((item) => item.mediaType === mediaFilter);
+    ? balancedSlice(recommendations)
+    : recommendations.filter((item) => item.mediaType === mediaFilter).slice(0, PAGE_SIZE);
 
   const visibleRecommendations = showAll
     ? filteredRecommendations
-    : filteredRecommendations.slice(0, INITIAL_SHOW_COUNT);
+    : filteredRecommendations.slice(0, 20);
 
-  const hasMore = filteredRecommendations.length > INITIAL_SHOW_COUNT && !showAll;
+  const hasMore = filteredRecommendations.length > 20 && !showAll;
 
   return (
     <div className="page">
