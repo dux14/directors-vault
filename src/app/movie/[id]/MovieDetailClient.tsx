@@ -23,6 +23,7 @@ import {
   updateWatchCount,
   addMovieToCollection,
   getUserCollectionsForMovie,
+  createCollection,
 } from "@/lib/actions";
 import { ratingToGrade, getRatingColor, getRatingDef } from "@/lib/ratings";
 import { useTranslation } from "@/lib/i18n/context";
@@ -100,7 +101,7 @@ interface Props {
 export default function MovieDetailClient({ movie, userMovie }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const { t } = useTranslation();
+  const { t, tmdbLocale } = useTranslation();
   const [currentStatus, setCurrentStatus] = useState<MovieStatus | null>(
     userMovie?.status || null
   );
@@ -115,6 +116,10 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const [showCollections, setShowCollections] = useState(false);
   const [collections, setCollections] = useState<(Collection & { hasMovie: boolean })[]>([]);
   const [loadingCollections, setLoadingCollections] = useState(false);
+  const [collectionSearch, setCollectionSearch] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [creatingCollection, setCreatingCollection] = useState(false);
 
   const director = movie.credits?.crew.find((c) => c.job === "Director");
   const cast = movie.credits?.cast.slice(0, 8) || [];
@@ -124,6 +129,12 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
   const runtime = movie.runtime
     ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
     : null;
+  const trailer = movie.videos?.results.find(
+    (v) => v.type === "Trailer" && v.site === "YouTube"
+  );
+  const countryCode = tmdbLocale.split("-")[1]?.toUpperCase() || "US";
+  const watchProviders = movie["watch/providers"]?.results[countryCode];
+  const streamingProviders = watchProviders?.flatrate || watchProviders?.rent || watchProviders?.buy || [];
 
   const handleStatusChange = async (status: MovieStatus) => {
     setSaving(true);
@@ -211,6 +222,22 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
     }
   };
 
+  const handleCreateAndAdd = async () => {
+    if (!newCollectionName.trim()) return;
+    setCreatingCollection(true);
+    try {
+      const newCol = await createCollection(newCollectionName.trim(), "custom");
+      await addMovieToCollection(newCol.id, movie.id, movie.title, movie.poster_path);
+      setCollections((prev) => [...prev, { ...newCol, hasMovie: true }]);
+      setShowCollections(false);
+      setNewCollectionName("");
+      setIsCreating(false);
+    } catch (err) {
+      console.error("Error creating collection:", err);
+    }
+    setCreatingCollection(false);
+  };
+
   return (
     <div className={styles.page}>
       {/* Backdrop */}
@@ -283,6 +310,19 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                 <span className={styles.tmdbRating}>
                   <IconStar /> {movie.vote_average.toFixed(1)}
                 </span>
+              )}
+              {trailer && (
+                <a
+                  href={`https://youtube.com/watch?v=${trailer.key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.trailerBtn}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  {t("movie.trailer")}
+                </a>
               )}
             </div>
             <div className={styles.genres}>
@@ -441,7 +481,12 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowCollections(false)}
+              onClick={() => {
+              setShowCollections(false);
+              setCollectionSearch("");
+              setIsCreating(false);
+              setNewCollectionName("");
+            }}
             >
               <motion.div
                 className="modal-content"
@@ -452,34 +497,96 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="modal-handle" />
-                <h3 style={{ marginBottom: "var(--space-md)" }}>
+                <h3 style={{ marginBottom: "var(--space-sm)" }}>
                   {t("movie.selectCollection")}
                 </h3>
+
+                {/* Search + Create toggle row */}
+                <div style={{ display: "flex", gap: "var(--space-xs)", marginBottom: "var(--space-sm)" }}>
+                  <input
+                    type="text"
+                    placeholder={t("movie.searchCollections")}
+                    value={collectionSearch}
+                    onChange={(e) => setCollectionSearch(e.target.value)}
+                    autoFocus={typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches}
+                    style={{
+                      flex: 1,
+                      padding: "var(--space-sm) var(--space-md)",
+                      background: "var(--bg-tertiary)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: "var(--radius-md)",
+                      color: "var(--text-primary)",
+                      fontSize: "0.875rem",
+                    }}
+                  />
+                  <button
+                    onClick={() => setIsCreating(!isCreating)}
+                    className="btn btn-primary btn-icon btn-sm"
+                    aria-label={t("movie.createCollection")}
+                  >
+                    <IconPlus />
+                  </button>
+                </div>
+
+                {/* Inline create form */}
+                {isCreating && (
+                  <div style={{ display: "flex", gap: "var(--space-xs)", marginBottom: "var(--space-sm)" }}>
+                    <input
+                      type="text"
+                      placeholder={t("movie.newCollectionName")}
+                      value={newCollectionName}
+                      onChange={(e) => setNewCollectionName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleCreateAndAdd(); }}
+                      autoFocus
+                      style={{
+                        flex: 1,
+                        padding: "var(--space-sm) var(--space-md)",
+                        background: "var(--bg-tertiary)",
+                        border: "1px solid var(--border-subtle)",
+                        borderRadius: "var(--radius-md)",
+                        color: "var(--text-primary)",
+                        fontSize: "0.875rem",
+                      }}
+                    />
+                    <button
+                      onClick={handleCreateAndAdd}
+                      disabled={creatingCollection || !newCollectionName.trim()}
+                      className="btn btn-primary btn-sm"
+                    >
+                      {creatingCollection ? t("movie.creating") : t("movie.createCollection")}
+                    </button>
+                  </div>
+                )}
+
+                {/* Collection list with scroll */}
                 {loadingCollections ? (
                   <p style={{ textAlign: "center", opacity: 0.6 }}>...</p>
-                ) : collections.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-                    {collections.map((col) => (
-                      <button
-                        key={col.id}
-                        disabled={col.hasMovie}
-                        onClick={() => handleAddToCollection(col.id)}
-                        className={`btn ${col.hasMovie ? "btn-ghost" : "btn-secondary"}`}
-                        style={{ justifyContent: "space-between", width: "100%" }}
-                      >
-                        <span>{col.name}</span>
-                        {col.hasMovie && (
-                          <span style={{ color: "var(--accent-primary)", fontSize: "0.85em" }}>
-                            <IconCheck /> {t("movie.added")}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
                 ) : (
-                  <p style={{ textAlign: "center", opacity: 0.6 }}>
-                    {t("movie.noCollections")}
-                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+                    {collections
+                      .filter((col) => col.name.toLowerCase().includes(collectionSearch.toLowerCase()))
+                      .map((col) => (
+                        <button
+                          key={col.id}
+                          disabled={col.hasMovie}
+                          onClick={() => handleAddToCollection(col.id)}
+                          className={`btn ${col.hasMovie ? "btn-ghost" : "btn-secondary"}`}
+                          style={{ justifyContent: "space-between", width: "100%" }}
+                        >
+                          <span>{col.name}</span>
+                          {col.hasMovie && (
+                            <span style={{ color: "var(--accent-primary)", fontSize: "0.85em" }}>
+                              <IconCheck /> {t("movie.added")}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    {collections.length === 0 && !collectionSearch && !isCreating && (
+                      <p style={{ textAlign: "center", opacity: 0.6 }}>
+                        {t("movie.noCollections")}
+                      </p>
+                    )}
+                  </div>
                 )}
               </motion.div>
             </motion.div>
@@ -548,6 +655,33 @@ export default function MovieDetailClient({ movie, userMovie }: Props) {
           <h2 className="section-title">{t("movie.synopsis")}</h2>
           <p className={styles.overview}>{movie.overview || t("movie.noSynopsis")}</p>
         </section>
+
+        {/* Streaming Providers */}
+        {streamingProviders.length > 0 && (
+          <section className={styles.section}>
+            <h2 className="section-title">{t("movie.whereToWatch")}</h2>
+            <div className={styles.providers}>
+              {streamingProviders.map((provider) => (
+                <a
+                  key={provider.provider_id}
+                  href={watchProviders?.link || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.providerChip}
+                >
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                    alt={provider.provider_name}
+                    width={32}
+                    height={32}
+                    className={styles.providerLogo}
+                  />
+                  <span>{provider.provider_name}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Director */}
         {director && (

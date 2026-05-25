@@ -83,6 +83,14 @@ export interface TMDBMovieDetail extends Omit<TMDBMovie, "genre_ids"> {
       type: string;
     }[];
   };
+  "watch/providers"?: {
+    results: Record<string, {
+      link: string;
+      flatrate?: { provider_id: number; provider_name: string; logo_path: string }[];
+      rent?: { provider_id: number; provider_name: string; logo_path: string }[];
+      buy?: { provider_id: number; provider_name: string; logo_path: string }[];
+    }>;
+  };
 }
 
 export interface TMDBCastMember {
@@ -258,7 +266,7 @@ export async function getMovieDetail(
   locale?: string
 ): Promise<TMDBMovieDetail> {
   return tmdbFetch<TMDBMovieDetail>(`/movie/${movieId}`, {
-    append_to_response: "credits,similar,recommendations,videos",
+    append_to_response: "credits,similar,recommendations,videos,watch/providers",
   }, locale);
 }
 

@@ -68,7 +68,7 @@ export async function getRankedMovies(): Promise<UserMovie[]> {
     .eq("status", "watched")
     .not("personal_rating", "is", null)
     .order("personal_rating", { ascending: false })
-    .order("updated_at", { ascending: false });
+    .order("tier_position", { ascending: true });
 
   if (error) throw new Error(error.message);
   return (data as UserMovie[]) || [];
@@ -156,10 +156,22 @@ export async function rateMovie(
     throw new Error("Rating must be an integer between 1 and 8");
   }
 
+  // Get current max tier_position for this tier
+  const { data: maxPos } = await supabase
+    .from("user_movies")
+    .select("tier_position")
+    .eq("user_id", user.id)
+    .eq("personal_rating", rating)
+    .order("tier_position", { ascending: false })
+    .limit(1);
+
+  const nextPosition = maxPos && maxPos.length > 0 ? maxPos[0].tier_position + 1 : 0;
+
   const { data, error } = await supabase
     .from("user_movies")
     .update({
       personal_rating: rating,
+      tier_position: nextPosition,
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", user.id)
@@ -465,6 +477,60 @@ export async function createCollectionWithMovies(
 }
 
 // ---- Auth Helpers ----
+
+/** Swap tier_position with adjacent movie in the same tier */
+export async function swapTierPosition(
+  movieId: string,
+  direction: "up" | "down"
+): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  // Get the target movie
+  const { data: target, error: targetErr } = await supabase
+    .from("user_movies")
+    .select("id, personal_rating, tier_position")
+    .eq("id", movieId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (targetErr || !target) throw new Error("Movie not found");
+
+  // Find the adjacent movie in the same tier
+  const adjacentPosition = direction === "up"
+    ? target.tier_position - 1
+    : target.tier_position + 1;
+
+  const { data: adjacent } = await supabase
+    .from("user_movies")
+    .select("id, tier_position")
+    .eq("user_id", user.id)
+    .eq("personal_rating", target.personal_rating)
+    .eq("tier_position", adjacentPosition)
+    .single();
+
+  if (!adjacent) return; // Already at boundary, no-op
+
+  // Swap positions
+  const { error: swapErr } = await supabase
+    .from("user_movies")
+    .update({ tier_position: adjacent.tier_position })
+    .eq("id", target.id);
+
+  if (swapErr) throw new Error(swapErr.message);
+
+  const { error: swapErr2 } = await supabase
+    .from("user_movies")
+    .update({ tier_position: target.tier_position })
+    .eq("id", adjacent.id);
+
+  if (swapErr2) throw new Error(swapErr2.message);
+
+  revalidatePath("/");
+}
 
 /** Sign out */
 export async function signOut() {

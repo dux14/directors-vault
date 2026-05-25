@@ -141,6 +141,14 @@ const es = {
   "movie.selectCollection": "Seleccionar colección",
   "movie.noCollections": "No tienes colecciones aún",
   "movie.added": "Agregada",
+  "movie.searchCollections": "Buscar colección...",
+  "movie.createCollection": "Crear colección",
+  "movie.newCollectionName": "Nombre de la colección",
+  "movie.creating": "Creando...",
+  "movie.trailer": "Trailer",
+  "movie.whereToWatch": "Dónde ver",
+  "movie.streamOn": "Disponible en streaming",
+  "movie.rentOrBuy": "Alquilar o comprar",
 
   // Collection Detail
   "collectionDetail.back": "Colecciones",
@@ -161,6 +169,10 @@ const es = {
   "collectionDetail.doneEditing": "Listo",
   "collectionDetail.removeMovie": "Quitar de la colección",
   "collectionDetail.confirmRemove": "Toca de nuevo para confirmar",
+
+  // Ranking
+  "ranking.reorder": "Reordenar",
+  "ranking.done": "Listo",
 
   // Rating grades
   "rating.S": "Obra maestra",

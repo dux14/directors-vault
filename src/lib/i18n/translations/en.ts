@@ -141,6 +141,14 @@ const en: Record<string, string> = {
   "movie.selectCollection": "Select collection",
   "movie.noCollections": "You don't have collections yet",
   "movie.added": "Added",
+  "movie.searchCollections": "Search collection...",
+  "movie.createCollection": "Create collection",
+  "movie.newCollectionName": "Collection name",
+  "movie.creating": "Creating...",
+  "movie.trailer": "Trailer",
+  "movie.whereToWatch": "Where to watch",
+  "movie.streamOn": "Stream on",
+  "movie.rentOrBuy": "Rent or buy",
 
   // Collection Detail
   "collectionDetail.back": "Collections",
@@ -161,6 +169,10 @@ const en: Record<string, string> = {
   "collectionDetail.doneEditing": "Done",
   "collectionDetail.removeMovie": "Remove from collection",
   "collectionDetail.confirmRemove": "Tap again to confirm",
+
+  // Ranking
+  "ranking.reorder": "Reorder",
+  "ranking.done": "Done",
 
   // Rating grades
   "rating.S": "Masterpiece",
