@@ -35,19 +35,19 @@ export default async function FriendProfilePage({ params }: Props) {
 
   // Fetch poster info for top movies
   const topMovieDetails = await Promise.all(
-    stats.topMovies.slice(0, 6).map(async (m) => {
+    stats.topItems.slice(0, 6).map(async (m) => {
       try {
-        const detail = await getMovieDetail(m.tmdb_movie_id, locale);
+        const detail = await getMovieDetail(m.tmdb_id, locale);
         return {
-          tmdb_id: m.tmdb_movie_id,
+          tmdb_id: m.tmdb_id,
           title: detail.title,
           poster_path: detail.poster_path,
           rating: m.personal_rating,
         };
       } catch {
         return {
-          tmdb_id: m.tmdb_movie_id,
-          title: `Movie #${m.tmdb_movie_id}`,
+          tmdb_id: m.tmdb_id,
+          title: `Movie #${m.tmdb_id}`,
           poster_path: null,
           rating: m.personal_rating,
         };

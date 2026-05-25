@@ -55,7 +55,7 @@ interface Props {
   stats: {
     watched: number;
     avgRating: number;
-    topMovies: { tmdb_movie_id: number; personal_rating: number }[];
+    topItems: { tmdb_id: number; media_type: string; personal_rating: number }[];
     topMovieDetails: TopMovie[];
   };
 }

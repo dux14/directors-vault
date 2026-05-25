@@ -100,7 +100,8 @@ export default function PersonDetailClient({ person, credits }: Props) {
     try {
       const collectionType = filter === "directing" ? "director" : filter === "cast" ? "actor" : (directorCount > 0 ? "director" : "actor");
       const moviesToExport = filteredMovies.map((m) => ({
-        tmdb_movie_id: m.id,
+        tmdb_id: m.id,
+        media_type: "movie" as const,
         movie_title: m.title,
         movie_poster_path: m.poster_path,
       }));

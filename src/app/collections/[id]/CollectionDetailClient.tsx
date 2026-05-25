@@ -18,7 +18,7 @@ import {
 import { useTranslation } from "@/lib/i18n/context";
 import { useView } from "@/lib/view/client";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
-import type { Collection, CollectionMovie, Friendship, CollectionType } from "@/lib/types";
+import type { Collection, CollectionMovie, Friendship, CollectionType, MediaType } from "@/lib/types";
 import type { ViewMode } from "@/lib/view/types";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./collectionDetail.module.css";
@@ -114,6 +114,15 @@ export default function CollectionDetailClient({
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
   const [removing, setRemoving] = useState(false);
   const [view, setView] = useView(initialView);
+  const [mediaFilter, setMediaFilter] = useState<"all" | MediaType>("all");
+
+  const hasMovies = initialMovies.some(m => m.media_type === "movie");
+  const hasTv = initialMovies.some(m => m.media_type === "tv");
+  const showMediaFilter = hasMovies && hasTv;
+
+  const filteredMovies = mediaFilter === "all"
+    ? initialMovies
+    : initialMovies.filter(m => m.media_type === mediaFilter);
 
   const isShared = members.length > 0;
   const isMember = members.some((m) => m.user_id === currentUserId);
@@ -164,7 +173,7 @@ export default function CollectionDetailClient({
     }
   };
 
-  const handleMovieClickToRemove = async (tmdbMovieId: number) => {
+  const handleMovieClickToRemove = async (tmdbMovieId: number, mediaType: MediaType) => {
     if (removing) return;
     if (pendingRemoval !== tmdbMovieId) {
       setPendingRemoval(tmdbMovieId);
@@ -172,7 +181,7 @@ export default function CollectionDetailClient({
     }
     setRemoving(true);
     try {
-      await removeMovieFromCollection(collection.id, tmdbMovieId);
+      await removeMovieFromCollection(collection.id, tmdbMovieId, mediaType);
       setPendingRemoval(null);
       router.refresh();
     } catch (err) {
@@ -411,31 +420,59 @@ export default function CollectionDetailClient({
                   : t("collectionDetail.editMovies")}
               </button>
             ) : <span />}
-            {!isEditingMovies && <ViewToggle value={view} onChange={setView} />}
+            {!isEditingMovies && (
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+                {showMediaFilter && (
+                  <div style={{ display: "flex", gap: "2px", background: "var(--bg-secondary)", borderRadius: "var(--radius-md)", padding: "2px" }}>
+                    {(["all", "movie", "tv"] as const).map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setMediaFilter(type)}
+                        style={{
+                          padding: "4px 12px",
+                          border: "none",
+                          background: mediaFilter === type ? "var(--accent-primary)" : "none",
+                          color: mediaFilter === type ? "var(--bg-primary)" : "var(--text-secondary)",
+                          fontSize: "12px",
+                          fontWeight: mediaFilter === type ? 600 : 400,
+                          borderRadius: "var(--radius-sm)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {t(type === "all" ? "filter.all" : type === "movie" ? "filter.movies" : "filter.series")}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <ViewToggle value={view} onChange={setView} />
+              </div>
+            )}
           </div>
         )}
 
         {/* Movies — list view (skipped when editing to keep remove UX simple) */}
-        {initialMovies.length > 0 && view === "list" && !isEditingMovies ? (
+        {initialMovies.length > 0 && filteredMovies.length > 0 && view === "list" && !isEditingMovies ? (
           <div className="movie-list">
-            {initialMovies.map((movie) => (
+            {filteredMovies.map((movie) => (
               <MovieListRow
                 key={movie.id}
-                tmdbId={movie.tmdb_movie_id}
-                title={movie.movie_title || `Movie #${movie.tmdb_movie_id}`}
+                tmdbId={movie.tmdb_id}
+                title={movie.movie_title || `Movie #${movie.tmdb_id}`}
                 posterPath={movie.movie_poster_path || null}
-                watched={watchedSet.has(movie.tmdb_movie_id)}
+                watched={watchedSet.has(movie.tmdb_id)}
+                mediaType={movie.media_type}
+                showBadge={showMediaFilter}
               />
             ))}
           </div>
-        ) : initialMovies.length > 0 ? (
+        ) : initialMovies.length > 0 && filteredMovies.length > 0 ? (
           <div className="movie-grid">
-            {initialMovies.map((movie) => {
-              const avg = isShared ? getAvgRating(movie.tmdb_movie_id) : null;
+            {filteredMovies.map((movie) => {
+              const avg = isShared ? getAvgRating(movie.tmdb_id) : null;
               const avgGrade = avg !== null ? ratingToGrade(Math.round(avg)) : null;
               const avgColor = avg !== null ? getRatingColor(Math.round(avg)) : undefined;
-              const movieRatings = isShared ? memberRatings[movie.tmdb_movie_id] : null;
-              const isPending = pendingRemoval === movie.tmdb_movie_id;
+              const movieRatings = isShared ? memberRatings[movie.tmdb_id] : null;
+              const isPending = pendingRemoval === movie.tmdb_id;
 
               return (
                 <div
@@ -443,10 +480,12 @@ export default function CollectionDetailClient({
                   className={`${styles.movieCell} ${isEditingMovies ? styles.editing : ""} ${isPending ? styles.pendingRemoval : ""}`}
                 >
                   <MovieCard
-                    tmdbId={movie.tmdb_movie_id}
-                    title={movie.movie_title || `Movie #${movie.tmdb_movie_id}`}
+                    tmdbId={movie.tmdb_id}
+                    title={movie.movie_title || `Movie #${movie.tmdb_id}`}
                     posterPath={movie.movie_poster_path || null}
-                    watched={watchedSet.has(movie.tmdb_movie_id)}
+                    watched={watchedSet.has(movie.tmdb_id)}
+                    mediaType={movie.media_type}
+                    showBadge={showMediaFilter}
                   />
 
                   {isEditingMovies && canEdit && (
@@ -455,7 +494,7 @@ export default function CollectionDetailClient({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleMovieClickToRemove(movie.tmdb_movie_id);
+                        handleMovieClickToRemove(movie.tmdb_id, movie.media_type);
                       }}
                       disabled={removing}
                       className={styles.removeButton}
@@ -502,6 +541,10 @@ export default function CollectionDetailClient({
                 </div>
               );
             })}
+          </div>
+        ) : initialMovies.length > 0 ? (
+          <div className="empty-state">
+            <h3 style={{ opacity: 0.6 }}>{t(mediaFilter === "movie" ? "filter.movies" : "filter.series")}</h3>
           </div>
         ) : (
           <div className="empty-state">

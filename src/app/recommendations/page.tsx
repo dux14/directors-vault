@@ -22,25 +22,26 @@ export default async function RecommendationsPage() {
     getUserMovies().catch(() => []),
   ]);
 
-  // Get top-rated movie IDs (rating >= 5 = B or better)
-  const topRatedIds = rankedMovies
-    .filter((m) => m.personal_rating && m.personal_rating >= 5)
-    .map((m) => m.tmdb_movie_id);
+  // Get top-rated IDs split by media type (rating >= 5 = B or better)
+  const topRated = rankedMovies.filter((m) => m.personal_rating && m.personal_rating >= 5);
+  const topRatedMovieIds = topRated.filter((m) => m.media_type === "movie").map((m) => m.tmdb_id);
+  const topRatedTvIds = topRated.filter((m) => m.media_type === "tv").map((m) => m.tmdb_id);
 
-  // Build set of all user's movie IDs to exclude
-  const userMovieIds = new Set(allMovies.map((m) => m.tmdb_movie_id));
+  // Build set of all user's item keys to exclude from recommendations
+  const watchedIds = new Set(allMovies.map((m) => `${m.tmdb_id}-${m.media_type}`));
 
   // Get personalized recommendations
   const recommendations = await getRecommendationsForUser(
-    topRatedIds,
-    userMovieIds,
+    topRatedMovieIds,
+    topRatedTvIds,
+    watchedIds,
     locale
   ).catch(() => []);
 
   return (
     <RecommendationsClient
       recommendations={recommendations}
-      hasRatedMovies={topRatedIds.length > 0}
+      hasRatedMovies={topRated.length > 0}
     />
   );
 }

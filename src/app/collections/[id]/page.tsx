@@ -54,14 +54,14 @@ export default async function CollectionDetailPage({ params }: Props) {
   let watchedIds: number[] = [];
   if (movies.length > 0) {
     const supabase = await createClient();
-    const tmdbIds = movies.map((m) => m.tmdb_movie_id);
+    const tmdbIds = movies.map((m) => m.tmdb_id);
     const { data: watchedRows } = await supabase
       .from("user_movies")
-      .select("tmdb_movie_id")
+      .select("tmdb_id")
       .eq("user_id", user.id)
       .eq("status", "watched")
-      .in("tmdb_movie_id", tmdbIds);
-    watchedIds = (watchedRows ?? []).map((r) => r.tmdb_movie_id);
+      .in("tmdb_id", tmdbIds);
+    watchedIds = (watchedRows ?? []).map((r) => r.tmdb_id);
   }
 
   return (
