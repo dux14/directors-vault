@@ -3,7 +3,7 @@
  * Shows person bio + filmography
  * ============================================ */
 
-import { getPersonDetail, getPersonMovieCredits } from "@/lib/tmdb";
+import { getPersonDetail, getPersonMovieCredits, getPersonTvCredits } from "@/lib/tmdb";
 import { getServerTmdbLocale } from "@/lib/i18n/server";
 import PersonDetailClient from "./PersonDetailClient";
 import type { Metadata } from "next";
@@ -31,10 +31,11 @@ export default async function PersonDetailPage({ params }: Props) {
   const personId = parseInt(id);
   const locale = await getServerTmdbLocale();
 
-  const [person, credits] = await Promise.all([
+  const [person, credits, tvCredits] = await Promise.all([
     getPersonDetail(personId, locale),
     getPersonMovieCredits(personId, locale),
+    getPersonTvCredits(personId, locale),
   ]);
 
-  return <PersonDetailClient person={person} credits={credits} />;
+  return <PersonDetailClient person={person} credits={credits} tvCredits={tvCredits} />;
 }

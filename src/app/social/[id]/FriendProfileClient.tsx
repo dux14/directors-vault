@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
 import { useTranslation } from "@/lib/i18n/context";
 import MovieCard from "@/components/MovieCard";
-import type { UserPublicProfile } from "@/lib/types";
+import type { UserPublicProfile, MediaType } from "@/lib/types";
 import styles from "./friendProfile.module.css";
 
 /* ---- SVG Icons ---- */
@@ -43,20 +43,13 @@ const IconTrophy = () => (
   </svg>
 );
 
-interface TopMovie {
-  tmdb_id: number;
-  title: string;
-  poster_path: string | null;
-  rating: number;
-}
-
 interface Props {
   profile: UserPublicProfile;
   stats: {
     watched: number;
     avgRating: number;
     topItems: { tmdb_id: number; media_type: string; personal_rating: number }[];
-    topMovieDetails: TopMovie[];
+    topItemDetails: { tmdb_id: number; media_type: string; title: string; poster_path: string | null; rating: number }[];
   };
 }
 
@@ -112,18 +105,21 @@ export default function FriendProfileClient({ profile, stats }: Props) {
           </div>
         </div>
 
-        {/* Top Movies */}
-        {stats.topMovieDetails.length > 0 && (
+        {/* Top Items */}
+        {stats.topItemDetails.length > 0 && (
           <section className={styles.section}>
             <h2 className="section-title"><IconTrophy /> {t("social.topMovies")}</h2>
             <div className="movie-grid">
-              {stats.topMovieDetails.map((movie) => (
+              {stats.topItemDetails.map((item) => (
                 <MovieCard
-                  key={movie.tmdb_id}
-                  tmdbId={movie.tmdb_id}
-                  title={movie.title}
-                  posterPath={movie.poster_path}
-                  size="medium"
+                  key={item.tmdb_id}
+                  tmdbId={item.tmdb_id}
+                  title={item.title}
+                  posterPath={item.poster_path}
+                  userRating={item.rating}
+                  mediaType={item.media_type as MediaType}
+                  showBadge={true}
+                  size="small"
                 />
               ))}
             </div>

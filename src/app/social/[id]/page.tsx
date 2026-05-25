@@ -3,7 +3,7 @@
  * ============================================ */
 
 import { getProfileById, getFriendStats } from "@/lib/social-actions";
-import { getMovieDetail } from "@/lib/tmdb";
+import { getMovieDetail, getTvDetail } from "@/lib/tmdb";
 import { getServerTmdbLocale } from "@/lib/i18n/server";
 import FriendProfileClient from "./FriendProfileClient";
 import { notFound } from "next/navigation";
@@ -33,13 +33,24 @@ export default async function FriendProfilePage({ params }: Props) {
 
   if (!profile) notFound();
 
-  // Fetch poster info for top movies
-  const topMovieDetails = await Promise.all(
+  // Fetch poster info for top items (movies and TV)
+  const topItemDetails = await Promise.all(
     stats.topItems.slice(0, 6).map(async (m) => {
       try {
+        if (m.media_type === "tv") {
+          const detail = await getTvDetail(m.tmdb_id, locale);
+          return {
+            tmdb_id: m.tmdb_id,
+            media_type: m.media_type,
+            title: detail.name,
+            poster_path: detail.poster_path,
+            rating: m.personal_rating,
+          };
+        }
         const detail = await getMovieDetail(m.tmdb_id, locale);
         return {
           tmdb_id: m.tmdb_id,
+          media_type: m.media_type,
           title: detail.title,
           poster_path: detail.poster_path,
           rating: m.personal_rating,
@@ -47,7 +58,8 @@ export default async function FriendProfilePage({ params }: Props) {
       } catch {
         return {
           tmdb_id: m.tmdb_id,
-          title: `Movie #${m.tmdb_id}`,
+          media_type: m.media_type,
+          title: `Item #${m.tmdb_id}`,
           poster_path: null,
           rating: m.personal_rating,
         };
@@ -58,7 +70,7 @@ export default async function FriendProfilePage({ params }: Props) {
   return (
     <FriendProfileClient
       profile={profile}
-      stats={{ ...stats, topMovieDetails }}
+      stats={{ ...stats, topItemDetails }}
     />
   );
 }
