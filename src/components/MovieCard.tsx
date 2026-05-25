@@ -10,7 +10,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { getPosterUrl } from "@/lib/tmdb";
 import { ratingToGrade, getRatingColor } from "@/lib/ratings";
-import type { MovieStatus } from "@/lib/types";
+import type { MediaType, MovieStatus } from "@/lib/types";
+import MediaBadge from "./MediaBadge";
 import styles from "./MovieCard.module.css";
 
 interface MovieCardProps {
@@ -25,6 +26,8 @@ interface MovieCardProps {
   showRank?: boolean;
   size?: "small" | "medium" | "large";
   watched?: boolean;
+  mediaType?: MediaType;
+  showBadge?: boolean;
 }
 
 export default function MovieCard({
@@ -39,6 +42,8 @@ export default function MovieCard({
   showRank = false,
   size = "medium",
   watched = false,
+  mediaType = "movie",
+  showBadge = false,
 }: MovieCardProps) {
   const year = releaseDate ? new Date(releaseDate).getFullYear() : null;
   const grade = userRating ? ratingToGrade(userRating) : null;
@@ -61,8 +66,9 @@ export default function MovieCard({
         </div>
       )}
 
-      <Link href={`/movie/${tmdbId}`} className={styles.link}>
+      <Link href={mediaType === "tv" ? `/tv/${tmdbId}` : `/movie/${tmdbId}`} className={styles.link}>
         <div className={styles.posterWrapper}>
+          {showBadge && <MediaBadge type={mediaType} />}
           <Image
             src={getPosterUrl(posterPath, size === "small" ? "small" : "medium")}
             alt={title}
