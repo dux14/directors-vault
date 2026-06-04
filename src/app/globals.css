@@ -644,10 +644,22 @@ h1 em, h2 em, .editorial-em {
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs, 6px);
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--text-primary);
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.section-title::after {
+  content: "";
+  width: 56px;
+  border-top: 1px solid var(--editorial-rule);
+  margin-left: var(--space-sm);
 }
 
 /* ---- Horizontal Scroll ---- */
@@ -663,6 +675,25 @@ h1 em, h2 em, .editorial-em {
 
 .scroll-row::-webkit-scrollbar {
   display: none;
+}
+
+/* Celuloide: asimetría editorial de posters — solo desktop */
+@media (min-width: 768px) {
+  .scroll-row {
+    padding-top: 10px;
+  }
+  .scroll-row > :nth-child(4n + 2) {
+    transform: translateY(6px) rotate(var(--editorial-tilt-a));
+  }
+  .scroll-row > :nth-child(4n) {
+    transform: translateY(4px) rotate(var(--editorial-tilt-b));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-row > * {
+    transform: none !important;
+  }
 }
 
 .scroll-row > * {
