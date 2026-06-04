@@ -27,7 +27,7 @@
 .posterWrapper {
   position: relative;
   aspect-ratio: 2/3;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-poster);
   overflow: hidden;
   background: var(--bg-tertiary);
   box-shadow: var(--shadow-poster);
@@ -35,11 +35,26 @@
 
 .poster {
   object-fit: cover;
-  transition: transform var(--transition-slow);
 }
 
-.card:hover .poster {
-  transform: scale(1.05);
+/* Celuloide: duotono dorado en hover (sin scale) */
+.posterWrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(212, 168, 67, 0) 30%, rgba(212, 168, 67, 0.28));
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  pointer-events: none;
+}
+
+.card:hover .posterWrapper::after {
+  opacity: 1;
+}
+
+.card:hover .posterWrapper {
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(212, 168, 67, 0.2);
 }
 
 .overlay {
@@ -105,17 +120,14 @@
 
 .statusDot.watched {
   background: var(--status-watched);
-  box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
 }
 
 .statusDot.want_to_watch {
   background: var(--status-watchlist);
-  box-shadow: 0 0 6px rgba(96, 165, 250, 0.5);
 }
 
 .statusDot.not_interested {
   background: var(--status-not-interested);
-  box-shadow: 0 0 6px rgba(248, 113, 113, 0.5);
 }
 
 .rank {
@@ -141,7 +153,7 @@
   background: var(--gradient-accent);
   border-color: var(--accent-primary);
   color: var(--bg-deep);
-  box-shadow: var(--shadow-glow);
+  box-shadow: var(--shadow-sm);
 }
 
 .upcomingBadge {
