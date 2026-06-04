@@ -36,6 +36,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
+        <div className="grain-overlay" aria-hidden="true" />
         <LanguageProvider>
           <Sidebar />
           <main className="main-content">{children}</main>
