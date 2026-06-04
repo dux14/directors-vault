@@ -6,6 +6,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
@@ -75,7 +76,9 @@ export default function LoginPage() {
       <div className={styles.card}>
         {/* Logo */}
         <div className={styles.logo}>
-          <div className={styles.logoIcon}>🎬</div>
+          <div className={styles.logoIcon}>
+            <Image src="/brand/aperture-128.png" alt="" width={56} height={56} priority />
+          </div>
           <h1 className={styles.logoText}>Director&apos;s Vault</h1>
           <p className={styles.logoSubtext}>Tu bóveda personal de cine</p>
         </div>
