@@ -40,7 +40,6 @@
 .logoIcon {
   font-size: 3rem;
   margin-bottom: var(--space-sm);
-  filter: drop-shadow(0 0 12px rgba(212, 168, 67, 0.4));
 }
 
 .logoText {
