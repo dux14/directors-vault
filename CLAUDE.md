@@ -55,7 +55,7 @@ Never edit committed migrations (`001`–`010`). Create new ones numbered in seq
 ## Environment Variables
 
 See `.env.example`. Required:
-- `NEXT_PUBLIC_TMDB_API_KEY` — TMDB v3 API key
+- `TMDB_API_KEY` — TMDB v3 API key (server-only; client components call TMDB via server actions in `src/lib/tmdb-actions.ts`)
 - `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` — from Supabase project dashboard
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only operations
 - `NEXT_PUBLIC_APP_URL` — set to `http://localhost:3000` locally

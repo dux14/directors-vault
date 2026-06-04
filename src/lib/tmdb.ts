@@ -334,7 +334,7 @@ async function tmdbFetch<T>(
   params: Record<string, string> = {},
   language: string = "es-MX"
 ): Promise<T> {
-  const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+  const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
     throw new Error("TMDB API key is not configured");
   }

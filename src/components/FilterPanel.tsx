@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/context";
-import { searchKeywords, type TMDBGenre, type TMDBKeyword } from "@/lib/tmdb";
+import type { TMDBGenre, TMDBKeyword } from "@/lib/tmdb";
+import { searchKeywordsAction } from "@/lib/tmdb-actions";
 import styles from "./FilterPanel.module.css";
 
 interface FilterPanelProps {
@@ -57,7 +58,7 @@ export default function FilterPanel({
       return;
     }
     const timer = setTimeout(async () => {
-      const res = await searchKeywords(keywordInput);
+      const res = await searchKeywordsAction(keywordInput);
       setKeywordSuggestions(res.results.slice(0, 8));
     }, 300);
     return () => clearTimeout(timer);
