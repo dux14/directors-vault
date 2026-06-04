@@ -47,7 +47,8 @@ export default function MovieListRow({
   const gradeColor = userRating ? getRatingColor(userRating) : undefined;
 
   return (
-    <Link href={mediaType === "tv" ? `/tv/${tmdbId}` : `/movie/${tmdbId}`} className={styles.item}>
+    // prefetch={false}: ver MovieCard — evita burst de prefetches RSC contra el WAF
+    <Link href={mediaType === "tv" ? `/tv/${tmdbId}` : `/movie/${tmdbId}`} prefetch={false} className={styles.item}>
       <div className={styles.poster}>
         <Image
           src={getPosterUrl(posterPath, "small")}

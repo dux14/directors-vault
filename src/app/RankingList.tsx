@@ -168,7 +168,8 @@ export default function RankingList({ movies: initialMovies }: RankingListProps)
                     )}
                   </>
                 ) : (
-                  <Link href={movie.media_type === "tv" ? `/tv/${movie.tmdb_id}` : `/movie/${movie.tmdb_id}`} className={styles.itemLink}>
+                  // prefetch={false}: ver MovieCard — evita burst de prefetches RSC contra el WAF
+                  <Link href={movie.media_type === "tv" ? `/tv/${movie.tmdb_id}` : `/movie/${movie.tmdb_id}`} prefetch={false} className={styles.itemLink}>
                     {/* Rank */}
                     <div className={`rank-number ${rank <= 3 ? "top-3" : ""}`}>
                       {rank}

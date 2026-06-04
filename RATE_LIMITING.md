@@ -27,6 +27,13 @@ Notas:
 - El límite se subió de 100 a **300 req/60s** el 2026-06-04: 100/min era apretado para
   navegación rápida con prefetch de Next.js y para IPs compartidas (CGNAT, oficinas).
   300/min ≈ 5 req/s sostenidos — ningún uso humano lo alcanza, un bot sigue capado.
+- **Excepción a "ningún uso humano lo alcanza" (2026-06-04)**: el prefetch automático de
+  `<Link>` no va a ritmo humano — cada card que entra al viewport dispara requests RSC
+  (`/movie/123?_rsc=...`), que NO empiezan con `/_next/` y sí cuentan. Scrollear grillas
+  grandes (ranking, watchlist, search) generaba cientos de prefetches y 429 a usuarios
+  legítimos. Fix en la app, no en el WAF: `prefetch={false}` en los `<Link>` de los
+  componentes de item repetido (`MovieCard`, `MovieListRow`, `RankingList`). Además
+  ahorra cuota: cada prefetch era una invocación de función que casi nunca se usaba.
 - Los contadores del WAF son **por región** — un atacante distribuido puede exceder el límite ~N× regiones. Aceptable para esta app.
 - La respuesta 429 la genera el WAF y no es personalizable desde nuestra config (no se le
   pueden añadir headers como `Retry-After`). La ventana es de 60 s.

@@ -69,7 +69,9 @@ export default function MovieCard({
         </div>
       )}
 
-      <Link href={mediaType === "tv" ? `/tv/${tmdbId}` : `/movie/${tmdbId}`} className={styles.link}>
+      {/* prefetch={false}: las grillas renderizan cientos de cards; el prefetch automático
+          dispara un burst de requests RSC que excede el rate limit del WAF (300/60s) y quema cuota */}
+      <Link href={mediaType === "tv" ? `/tv/${tmdbId}` : `/movie/${tmdbId}`} prefetch={false} className={styles.link}>
         <div className={styles.posterWrapper}>
           {showBadge && <MediaBadge type={mediaType} />}
           {isUpcoming && (
