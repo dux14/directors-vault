@@ -9,14 +9,6 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  searchMulti,
-  searchPerson,
-  getTrending,
-  getTrendingTv,
-  getGenres,
-  getTvGenres,
-  discoverMovies,
-  discoverTv,
   movieToMediaItem,
   tvToMediaItem,
   getProfileUrl,
@@ -26,6 +18,16 @@ import {
   type TMDBPersonSearchResult,
   type MediaItem,
 } from "@/lib/tmdb";
+import {
+  searchMultiAction,
+  searchPersonAction,
+  getTrendingAction,
+  getTrendingTvAction,
+  getGenresAction,
+  getTvGenresAction,
+  discoverMoviesAction,
+  discoverTvAction,
+} from "@/lib/tmdb-actions";
 import MovieCard from "@/components/MovieCard";
 import MovieListRow from "@/components/MovieListRow";
 import ViewToggle from "@/components/ViewToggle";
@@ -107,11 +109,11 @@ export default function SearchPage() {
   useEffect(() => {
     const loadGenres = async () => {
       if (mediaTypeFilter === "tv") {
-        setGenres(await getTvGenres());
+        setGenres(await getTvGenresAction());
       } else if (mediaTypeFilter === "movie") {
-        setGenres(await getGenres());
+        setGenres(await getGenresAction());
       } else {
-        const [mg, tg] = await Promise.all([getGenres(), getTvGenres()]);
+        const [mg, tg] = await Promise.all([getGenresAction(), getTvGenresAction()]);
         const merged = [...mg];
         for (const g of tg) {
           if (!merged.find((m) => m.id === g.id)) merged.push(g);
@@ -124,7 +126,7 @@ export default function SearchPage() {
 
   // Load trending on mount — merge movies and TV
   useEffect(() => {
-    Promise.all([getTrending("day"), getTrendingTv("day")])
+    Promise.all([getTrendingAction("day"), getTrendingTvAction("day")])
       .then(([movies, tv]) => {
         const merged = [
           ...movies.results.map(movieToMediaItem),
@@ -148,13 +150,13 @@ export default function SearchPage() {
       };
 
       if (mediaTypeFilter === "movie") {
-        const res = await discoverMovies(params);
+        const res = await discoverMoviesAction(params);
         setDiscoverResults(res.results.map(movieToMediaItem));
       } else if (mediaTypeFilter === "tv") {
-        const res = await discoverTv(params);
+        const res = await discoverTvAction(params);
         setDiscoverResults(res.results.map(tvToMediaItem));
       } else {
-        const [m, tv] = await Promise.all([discoverMovies(params), discoverTv(params)]);
+        const [m, tv] = await Promise.all([discoverMoviesAction(params), discoverTvAction(params)]);
         const merged = [
           ...m.results.map(movieToMediaItem),
           ...tv.results.map(tvToMediaItem),
@@ -180,7 +182,7 @@ export default function SearchPage() {
     setSearched(true);
     try {
       if (activeTab === "titles") {
-        const data = await searchMulti(q);
+        const data = await searchMultiAction(q);
         const items: MediaItem[] = data.results
           .filter(
             (r): r is (TMDBMovie & { media_type: "movie" }) | (TMDBTvShow & { media_type: "tv" }) =>
@@ -189,7 +191,7 @@ export default function SearchPage() {
           .map((r) => (r.media_type === "movie" ? movieToMediaItem(r) : tvToMediaItem(r)));
         setTitleResults(items);
       } else {
-        const data = await searchPerson(q);
+        const data = await searchPersonAction(q);
         setPersonResults(data.results);
       }
     } catch {
