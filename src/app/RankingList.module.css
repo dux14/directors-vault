@@ -148,3 +148,17 @@
   opacity: 0.25;
   cursor: not-allowed;
 }
+
+/* Celuloide: asimetría editorial — solo desktop */
+@media (min-width: 768px) {
+  .item:nth-child(4n + 2) {
+    transform: translateY(14px) rotate(var(--editorial-tilt-a));
+  }
+  .item:nth-child(4n) {
+    transform: translateY(8px) rotate(var(--editorial-tilt-b));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item { transform: none !important; }
+}
