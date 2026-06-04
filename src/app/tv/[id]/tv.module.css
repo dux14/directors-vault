@@ -75,6 +75,9 @@
 .title {
   font-size: clamp(1.25rem, 3.5vw, 2rem);
   line-height: 1.2;
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -1px;
 }
 
 .tagline {
@@ -106,6 +109,19 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs);
+}
+
+/* Personal rating — editorial typographic grade (overrides global chip style) */
+.currentStatus :global(.rating-badge) {
+  font-family: var(--font-display);
+  font-weight: 900;
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  border-radius: 0;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
 }
 
 /* Actions */
