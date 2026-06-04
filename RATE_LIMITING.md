@@ -21,9 +21,12 @@ Hobby permite 3 custom rules, de las cuales máx. 1 de rate limit. Usamos 2:
 | # | Regla | Condición | Acción |
 |---|-------|-----------|--------|
 | 1 | `Deny exploit probes` | path empieza con `/wp-admin`, `/wp-login`, `/.env`, `/.git`, `/phpmyadmin` o `/xmlrpc.php` | `deny` (403) |
-| 2 | `Rate limit app (per IP)` | path NO empieza con `/_next/` | `rate_limit`: **100 req / 60 s por IP** (fixed window) → 429 al exceder |
+| 2 | `Rate limit app (per IP)` | path NO empieza con `/_next/` | `rate_limit`: **300 req / 60 s por IP** (fixed window) → 429 al exceder |
 
 Notas:
+- El límite se subió de 100 a **300 req/60s** el 2026-06-04: 100/min era apretado para
+  navegación rápida con prefetch de Next.js y para IPs compartidas (CGNAT, oficinas).
+  300/min ≈ 5 req/s sostenidos — ningún uso humano lo alcanza, un bot sigue capado.
 - Los contadores del WAF son **por región** — un atacante distribuido puede exceder el límite ~N× regiones. Aceptable para esta app.
 - La respuesta 429 la genera el WAF y no es personalizable desde nuestra config (no se le
   pueden añadir headers como `Retry-After`). La ventana es de 60 s.
@@ -38,13 +41,13 @@ Notas:
 vercel firewall rules list --expand        # ver reglas y condiciones
 vercel firewall rules inspect "Rate limit app (per IP)"
 
-# Ajustar el límite (ej. 200 req/60s) — OJO: edit reemplaza TODAS las condiciones,
+# Ajustar el límite (ej. 500 req/60s) — OJO: edit reemplaza TODAS las condiciones,
 # hay que repetirlas:
 vercel firewall rules edit "Rate limit app (per IP)" \
   --condition '{"type":"path","op":"pre","value":"/_next/","neg":true}' \
   --action rate_limit \
   --rate-limit-window 60 \
-  --rate-limit-requests 200 \
+  --rate-limit-requests 500 \
   --rate-limit-keys ip \
   --rate-limit-action rate_limit \
   --yes
@@ -73,8 +76,8 @@ Si algún día hay abuso real de login, el siguiente paso es habilitar CAPTCHA
 
 - `/wp-admin` y `/.env` → 403 (regla 1).
 - Regla 2 demostrada bajando temporalmente el límite a 5/60s: request #5 → `HTTP/2 429` con
-  `x-vercel-mitigated: deny` (sin header `Retry-After` — el WAF no lo envía). Restaurado a
-  100/60s inmediatamente después.
+  `x-vercel-mitigated: deny` (sin header `Retry-After` — el WAF no lo envía). Restaurado
+  inmediatamente después (el límite vigente es el de la tabla de arriba).
 - Burst rápido (~10 req/s) → la mitigación DDoS automática desafía ANTES de que la regla
   cuente (403 + `x-vercel-mitigated: challenge`) y deja la IP marcada varios minutos —
   tenerlo en cuenta al probar contra producción.
